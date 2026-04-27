@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>#SIGNAL — あなたはまだ、自分の意志で生きていますか</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+JP:wght@200;300;400&family=Orbitron:wght@400;700;900&display=swap');
+:root{
+  --bg:#03030a;--bg2:#06060f;
+  --green:#00ff88;--gdim:rgba(0,255,136,.28);--gfaint:rgba(0,255,136,.07);
+  --red:#ff1a3c;--rdim:rgba(255,26,60,.25);
+  --amber:#ffaa00;--adim:rgba(255,170,0,.25);
+  --blue:#4499ff;--cyan:#00ddff;
+  --kenji:#4499ff;--sara:#ffaa00;--ares:#00ddff;--mnemo:#ff1a3c;--sys:#3a8a3a;
+  --text:#c8dcc8;--dim:#2a4a2a;--dim2:#3a6a3a;--dim3:#6a9a6a;
+  --border:#0d1f0d;--border2:#1a2f1a;
+  /* LARGER base sizes */
+  --fs-xs:clamp(11px,1.1vw,13px);
+  --fs-sm:clamp(13px,1.3vw,15px);
+  --fs-md:clamp(15px,1.6vw,18px);
+  --fs-lg:clamp(18px,2.2vw,24px);
+  --fs-xl:clamp(24px,3.5vw,36px);
+  --fs-hero:clamp(52px,9vw,110px);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);line-height:1.75;cursor:crosshair;overflow-x:hidden;padding-bottom:32px;}
+body.locked{overflow:hidden;height:100vh;}
+body.paused .ep-wrap,body.paused .log-wrap{filter:brightness(.3);pointer-events:none;}
+
+/* OVERLAYS */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,136,.01) 3px,rgba(0,255,136,.01) 4px);pointer-events:none;z-index:10;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 45%,rgba(0,0,0,.82) 100%);pointer-events:none;z-index:10;animation:crt 14s infinite;}
+@keyframes crt{0%,91%,100%{opacity:1}93%{opacity:.88}96%{opacity:.82}97%{opacity:1}}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;}
+#prologue-screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;}
+#bonus-screen.active{display:block;}
+
+/* PROGRESS */
+#pbar{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.04);z-index:900;display:none;}
+#pfill{height:100%;background:var(--green);box-shadow:0 0 8px var(--green);width:0%;transition:width 1.2s ease;}
+
+/* STATUS BAR */
+#sbar{position:fixed;bottom:0;left:0;right:0;height:30px;background:rgba(0,0,0,.97);border-top:1px solid var(--border);display:none;align-items:center;padding:0 clamp(12px,2vw,24px);gap:clamp(14px,2vw,24px);font-size:var(--fs-xs);color:var(--dim3);letter-spacing:2px;z-index:900;}
+.sdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:sp 2s infinite;margin-right:4px;}
+@keyframes sp{0%,100%{opacity:1}50%{opacity:.15}}
+#sbar .fx{flex:1;}
+
+/* MISSION SPLASH */
+#mission-splash{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.97);display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px;cursor:pointer;}
+#mission-splash.show{display:flex;}
+.mspl-tag{font-size:var(--fs-xs);letter-spacing:6px;color:var(--red);margin-bottom:16px;animation:bl 1s step-end infinite;}
+.mspl-num{font-family:'Orbitron',monospace;font-size:var(--fs-xl);font-weight:900;letter-spacing:4px;color:var(--green);text-shadow:0 0 40px var(--gdim);margin-bottom:12px;}
+.mspl-title{font-family:'Orbitron',monospace;font-size:var(--fs-lg);font-weight:700;letter-spacing:3px;color:var(--text);margin-bottom:24px;}
+.mspl-desc{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);max-width:560px;line-height:2.2;margin-bottom:32px;word-break:keep-all;overflow-wrap:break-word;text-align:left;}
+.mspl-bar-wrap{width:300px;max-width:80vw;height:2px;background:var(--border2);}
+.mspl-bar{height:100%;background:var(--green);box-shadow:0 0 8px var(--green);width:0%;}
+.mspl-hint{font-size:var(--fs-xs);color:var(--dim2);letter-spacing:3px;margin-top:16px;}
+
+/* MISSION BAR (top) */
+#mission-bar{position:fixed;top:3px;left:0;right:0;height:34px;background:rgba(0,0,0,.95);border-bottom:1px solid var(--border);display:none;align-items:center;padding:0 clamp(12px,2vw,20px);gap:12px;z-index:890;font-size:var(--fs-xs);}
+#mission-bar.show{display:flex;}
+.mbar-tag{color:var(--red);letter-spacing:3px;white-space:nowrap;flex-shrink:0;}
+.mbar-title{color:var(--text);letter-spacing:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.mbar-prog{color:var(--green);letter-spacing:2px;white-space:nowrap;flex-shrink:0;}
+
+/* ===== MENU ===== */
+#menu-btn{position:fixed;right:clamp(12px,2vw,20px);top:50%;transform:translateY(-50%);z-index:950;display:none;flex-direction:column;gap:6px;cursor:pointer;padding:10px;background:rgba(0,0,0,.8);border:1px solid var(--border2);}
+#menu-btn.show{display:flex;}
+#menu-btn span{display:block;width:20px;height:2px;background:var(--green);transition:all .3s;}
+#menu-btn:hover span{background:var(--text);}
+
+#menu-panel{position:fixed;right:clamp(12px,2vw,20px);top:50%;transform:translateY(-50%);z-index:950;width:clamp(220px,28vw,300px);background:rgba(3,3,10,.98);border:1px solid var(--green-dim, #00ff8840);display:none;flex-direction:column;gap:0;}
+#menu-panel.open{display:flex;}
+
+.menu-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border2);}
+.menu-header-title{font-family:'Orbitron',monospace;font-size:var(--fs-xs);letter-spacing:4px;color:var(--green);}
+.menu-close{background:none;border:none;color:var(--dim3);font-size:18px;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+.menu-close:hover{color:var(--red);}
+
+.menu-section{border-bottom:1px solid var(--border);}
+.menu-section-title{font-size:var(--fs-xs);letter-spacing:4px;color:var(--dim3);padding:10px 16px 6px;opacity:.6;}
+
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s;font-size:var(--fs-xs);letter-spacing:2px;color:var(--text);}
+.menu-item:hover{background:var(--gfaint);}
+.menu-item-icon{font-size:14px;flex-shrink:0;}
+.menu-item-label{flex:1;}
+.menu-item-sub{font-size:10px;color:var(--dim2);letter-spacing:1px;}
+.menu-item.danger:hover{background:rgba(255,26,60,.06);color:var(--red);}
+.menu-item.danger .menu-item-icon{color:var(--red);}
+
+/* LONG PRESS VISUAL */
+#all-reset-progress{height:2px;background:var(--red);width:0%;transition:none;margin:0 16px 8px;}
+#all-reset-progress.running{transition:width 2s linear;}
+
+/* HINTS PANEL */
+.hint-section{max-height:280px;overflow-y:auto;}
+.hint-folder{border-bottom:1px solid var(--border);}
+.hint-folder-header{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;font-size:var(--fs-xs);letter-spacing:2px;color:var(--dim3);transition:all .15s;}
+.hint-folder-header:hover{background:var(--gfaint);color:var(--text);}
+.hint-folder-header.active-mission{color:var(--amber);}
+.hint-folder-header.completed{color:var(--dim);text-decoration:line-through;cursor:not-allowed;}
+.hint-folder-icon{font-size:13px;}
+.hint-folder-body{display:none;padding:0 16px 10px;}
+.hint-folder-body.open{display:block;}
+.hint-item{font-size:var(--fs-xs);color:var(--dim3);line-height:2;padding:4px 0;border-top:1px solid var(--border);letter-spacing:1px;}
+.hint-item::before{content:'→ ';color:var(--amber);}
+.hint-locked{font-size:var(--fs-xs);color:var(--dim);letter-spacing:2px;padding:8px 0;text-align:center;}
+@keyframes bl{50%{opacity:0}}
+
+/* LANDING */
+#landing{position:fixed;inset:0;z-index:500;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:clamp(20px,4vw,60px);overflow:hidden;transition:opacity .9s ease;}
+#landing.out{opacity:0;pointer-events:none;}
+.lgrid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:80px 80px;opacity:.5;animation:gp 6s ease-in-out infinite;}
+@keyframes gp{0%,100%{opacity:.5}50%{opacity:.25}}
+.ltag{font-size:var(--fs-xs);letter-spacing:5px;color:var(--red);margin-bottom:clamp(12px,2vh,24px);animation:bl 2s step-end infinite;position:relative;z-index:1;}
+.ltitle{font-family:'Orbitron',monospace;font-size:var(--fs-hero);font-weight:900;letter-spacing:.12em;color:var(--green);text-shadow:0 0 60px var(--gdim),0 0 120px rgba(0,255,136,.1);position:relative;z-index:1;animation:tg 8s infinite;}
+@keyframes tg{0%,87%,100%{text-shadow:0 0 60px var(--gdim);transform:none;}88%{transform:translate(-3px,0);text-shadow:3px 0 var(--red),-3px 0 var(--cyan);}89%{transform:translate(3px,0);}90%{transform:none;}}
+.lsub{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:200;color:var(--dim3);letter-spacing:.28em;margin:clamp(8px,1.5vh,16px) 0 clamp(4px,1vh,8px);z-index:1;position:relative;}
+.ldate{font-size:var(--fs-sm);color:var(--red);letter-spacing:4px;margin-bottom:clamp(24px,4vh,52px);z-index:1;position:relative;}
+.ldesc{max-width:min(520px,88vw);font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);line-height:2.2;margin-bottom:clamp(24px,4vh,52px);z-index:1;position:relative;border-left:1px solid var(--gdim);padding-left:clamp(14px,2vw,24px);text-align:left;}
+.ldesc span{color:var(--text);}.ldesc em{color:var(--amber);}
+.enterbtn{font-family:'Orbitron',monospace;font-size:clamp(11px,1.3vw,14px);font-weight:700;letter-spacing:6px;padding:clamp(14px,2vh,20px) clamp(32px,5vw,60px);background:transparent;color:var(--green);border:1px solid var(--gdim);cursor:pointer;z-index:20;position:relative;overflow:hidden;transition:all .3s;text-transform:uppercase;}
+.enterbtn::before{content:'';position:absolute;inset:0;background:var(--gfaint);transform:translateX(-100%);transition:transform .3s;}
+.enterbtn:hover::before{transform:translateX(0);}
+.enterbtn:hover{box-shadow:0 0 50px var(--gdim);letter-spacing:8px;}
+.lwarn{position:absolute;bottom:24px;font-size:var(--fs-xs);color:var(--dim);letter-spacing:3px;}
+
+/* PROLOGUE */
+#prologue-screen{min-height:100vh;padding:clamp(32px,5vh,60px) clamp(16px,4vw,32px);}
+.pro-inner{max-width:min(760px,95vw);width:100%;}
+.pro-ep{font-size:var(--fs-xs);letter-spacing:5px;color:var(--green);opacity:.5;margin-bottom:10px;}
+.pro-title{font-family:'Orbitron',monospace;font-size:var(--fs-xl);font-weight:900;letter-spacing:3px;color:var(--text);margin-bottom:clamp(16px,3vh,28px);line-height:1.1;}
+.pro-title span{color:var(--green);}
+.pro-hr{height:1px;background:var(--border2);margin:clamp(14px,2.5vh,22px) 0;}
+.pro-block{border-left:2px solid var(--border2);padding-left:clamp(14px,2vw,22px);margin-bottom:clamp(18px,2.8vh,26px);}
+.pro-block.hl{border-color:var(--gdim);}
+.pro-lbl{font-size:var(--fs-xs);letter-spacing:4px;color:var(--green);opacity:.5;margin-bottom:8px;}
+.pro-txt{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);line-height:2.2;word-break:keep-all;}
+.pro-txt strong{color:var(--text);font-weight:400;}.pro-txt em{color:var(--amber);font-style:normal;}.pro-txt .r{color:var(--red);}
+.probtn{font-family:'Orbitron',monospace;font-size:var(--fs-sm);font-weight:700;letter-spacing:4px;padding:clamp(12px,1.8vh,16px) clamp(24px,3.5vw,40px);background:transparent;color:var(--green);border:1px solid var(--gdim);cursor:pointer;transition:all .3s;margin-top:8px;text-transform:uppercase;}
+.probtn:hover{background:var(--gfaint);box-shadow:0 0 28px var(--gdim);}
+
+/* MAIN */
+.ep-wrap{max-width:min(1080px,96vw);margin:0 auto;padding:clamp(52px,7vh,72px) clamp(16px,3vw,32px) clamp(60px,8vh,100px);}
+.ep-banner{padding:clamp(24px,4vh,40px) 0 clamp(16px,3vh,28px);border-bottom:1px solid var(--border2);margin-bottom:clamp(20px,3.5vh,36px);}
+.ep-num{font-size:var(--fs-xs);letter-spacing:5px;color:var(--green);opacity:.5;margin-bottom:8px;}
+.ep-title{font-family:'Orbitron',monospace;font-size:var(--fs-xl);font-weight:700;letter-spacing:3px;color:var(--text);}
+.ep-sub{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:200;color:var(--dim3);letter-spacing:3px;margin-top:6px;}
+
+/* LOG */
+.tbox{background:#000;border:1px solid var(--border2);margin-bottom:clamp(18px,3vh,32px);}
+.tbar{background:#080808;border-bottom:1px solid var(--border2);padding:10px clamp(12px,1.5vw,16px);display:flex;align-items:center;gap:7px;font-size:var(--fs-xs);color:var(--dim2);letter-spacing:2px;}
+.tdot{width:9px;height:9px;border-radius:50%;}
+.tbody{padding:clamp(14px,2.2vh,22px) clamp(16px,2.2vw,24px);min-height:60px;}
+.le{display:grid;grid-template-columns:clamp(64px,8vw,94px) clamp(76px,9vw,114px) 1fr;gap:0 clamp(8px,1vw,14px);margin-bottom:clamp(8px,1.2vh,12px);opacity:0;transform:translateY(4px);transition:opacity .55s,transform .55s;}
+.le.vis{opacity:1;transform:none;}
+.lt{color:var(--dim3);font-size:var(--fs-xs);padding-top:2px;opacity:.7;}
+.ls{font-size:var(--fs-xs);padding-top:2px;font-weight:700;}
+.lc-kenji{color:var(--kenji);}.lc-sara{color:var(--sara);}.lc-ares{color:var(--ares);}.lc-mnemo{color:var(--mnemo);}.lc-system{color:var(--sys);}.lc-unknown{color:var(--green);}
+.le.spk-kenji .ltext{color:var(--kenji);}.le.spk-sara .ltext{color:var(--sara);}.le.spk-ares .ltext{color:var(--ares);}.le.spk-mnemo .ltext{color:var(--mnemo);}.le.spk-system .ltext{color:var(--sys);}.le.spk-unknown .ltext{color:var(--green);}
+.ltext{font-size:var(--fs-sm);line-height:1.9;word-break:keep-all;overflow-wrap:break-word;}
+.ltext b{font-weight:700;}
+
+/* HACK */
+.hack-section{display:none;margin-bottom:clamp(20px,3vh,32px);}
+.hack-header{border:1px solid var(--rdim);background:rgba(255,26,60,.03);padding:clamp(16px,2.5vh,22px) clamp(18px,2.5vw,24px);margin-bottom:clamp(16px,2.5vh,24px);position:relative;}
+.hack-header::before{content:'// HACK TERMINAL UNLOCKED';position:absolute;top:-1px;left:18px;background:var(--red);color:#000;font-size:var(--fs-xs);font-weight:700;letter-spacing:3px;padding:3px 10px;transform:translateY(-50%);}
+.hack-title{font-family:'Orbitron',monospace;font-size:var(--fs-md);font-weight:700;letter-spacing:3px;color:var(--red);margin-bottom:8px;}
+.hack-desc{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);line-height:2;word-break:keep-all;}
+
+/* SYSTEM BROWSER */
+.sys-chrome{border:1px solid var(--border2);background:#000;overflow:hidden;margin-bottom:clamp(16px,2.5vh,22px);}
+.sys-urlbar{background:#080808;border-bottom:1px solid var(--border2);padding:9px clamp(12px,1.5vw,16px);display:flex;align-items:center;gap:10px;}
+.sys-dots{display:flex;gap:5px;}
+.sdot2{width:9px;height:9px;border-radius:50%;}
+.url{flex:1;background:#040404;border:1px solid var(--border2);padding:5px clamp(10px,1.2vw,14px);font-size:var(--fs-xs);color:var(--dim3);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sys-page{display:none;padding:clamp(16px,2.5vh,22px) clamp(16px,2.5vw,24px);}
+.sys-page.active{display:block;}
+.sys-nav{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border2);margin-bottom:clamp(12px,1.8vh,18px);}
+.sn{font-size:var(--fs-xs);letter-spacing:2px;color:var(--dim3);padding:9px clamp(12px,1.6vw,18px);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.sn:hover,.sn.on{color:var(--text);border-bottom-color:var(--green);}
+.sn.locked-tab{color:var(--dim);cursor:not-allowed;}
+.sn.locked-tab:hover{color:var(--dim);border-bottom-color:transparent;}
+
+.frow{display:flex;align-items:flex-start;gap:12px;padding:clamp(10px,1.5vh,14px) 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.frow:hover{background:var(--gfaint);padding-left:8px;}
+.ficon{font-size:var(--fs-md);opacity:.6;flex-shrink:0;margin-top:2px;}
+.fid{font-size:var(--fs-xs);color:var(--green);opacity:.5;letter-spacing:2px;}
+.fname{font-size:var(--fs-sm);color:var(--text);}
+.fmeta{font-size:var(--fs-xs);color:var(--dim3);margin-top:2px;}
+.flocked{opacity:.4;cursor:not-allowed;}
+.flocked:hover{background:transparent;padding-left:0;}
+.fbadge{font-size:var(--fs-xs);letter-spacing:2px;padding:3px 8px;border:1px solid;margin-left:auto;flex-shrink:0;}
+.fbadge-r{color:var(--red);border-color:var(--rdim);}.fbadge-a{color:var(--amber);border-color:var(--adim);}.fbadge-g{color:var(--green);border-color:var(--gdim);}
+
+.fv-tag{font-size:var(--fs-xs);letter-spacing:4px;color:var(--amber);margin-bottom:clamp(12px,1.8vh,16px);opacity:.7;}
+.fv-body{font-size:var(--fs-sm);color:var(--dim3);line-height:2.2;word-break:keep-all;}
+.fv-body strong{color:var(--text);}.fv-body em{color:var(--red);font-style:normal;}.fv-body .cy{color:var(--cyan);}.fv-body .gr{color:var(--green);}
+.fv-back{background:none;border:1px solid var(--border2);color:var(--dim3);font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);letter-spacing:2px;padding:7px 16px;cursor:pointer;margin-top:14px;transition:all .2s;}
+.fv-back:hover{color:var(--text);border-color:var(--dim3);}
+
+/* CLUE — click to reveal */
+.clue-trigger{border:1px solid var(--gdim);background:var(--gfaint);padding:clamp(12px,1.8vh,16px) clamp(14px,2vw,20px);margin-top:16px;cursor:pointer;transition:all .2s;position:relative;animation:fvin .4s ease;}
+.clue-trigger::before{content:'// 手がかり発見 — クリックして確認';position:absolute;top:-1px;left:14px;background:var(--green);color:#000;font-size:var(--fs-xs);font-weight:700;letter-spacing:3px;padding:3px 8px;transform:translateY(-50%);}
+.clue-trigger:hover{background:rgba(0,255,136,.12);}
+.clue-trigger-hint{font-size:var(--fs-xs);color:var(--dim3);letter-spacing:2px;text-align:center;padding:8px 0;}
+.clue-content{display:none;margin-top:12px;border-top:1px solid var(--gdim);padding-top:12px;}
+.clue-content.open{display:block;animation:fvin .3s ease;}
+.clue-text{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--text);line-height:2;word-break:keep-all;}
+.clue-text strong{color:var(--amber);}
+@keyframes fvin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* PUZZLE */
+.puzzle-box{border:1px solid var(--border2);background:var(--bg2);padding:clamp(18px,2.8vh,26px);margin-bottom:clamp(16px,2.5vh,22px);}
+.puzzle-label{font-size:var(--fs-xs);letter-spacing:4px;color:var(--amber);opacity:.7;margin-bottom:12px;}
+.puzzle-prompt{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);line-height:2.1;margin-bottom:clamp(14px,2.2vh,20px);word-break:keep-all;}
+.puzzle-prompt strong{color:var(--text);font-weight:400;}
+.cipher-grid{display:flex;flex-wrap:wrap;gap:clamp(5px,0.9vw,9px);margin-bottom:clamp(12px,1.8vh,18px);}
+.cipher-cell{width:clamp(32px,4vw,44px);height:clamp(32px,4vw,44px);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);color:var(--dim3);cursor:pointer;transition:all .2s;user-select:none;}
+.cipher-cell:hover{border-color:var(--green);color:var(--green);}
+.cipher-cell.selected{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,.08);}
+.cipher-cell.correct{border-color:var(--green);color:var(--green);background:var(--gfaint);}
+.cipher-cell.wrong{border-color:var(--red);color:var(--red);}
+.seq-options{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.seq-btn{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:10px clamp(16px,2.5vw,24px);background:#000;border:1px solid var(--border2);color:var(--text);cursor:pointer;transition:all .2s;letter-spacing:2px;}
+.seq-btn:hover{border-color:var(--green);color:var(--green);}
+.seq-btn.correct{border-color:var(--green);color:var(--green);background:var(--gfaint);}
+.seq-btn.wrong{border-color:var(--red);color:var(--red);opacity:.5;pointer-events:none;}
+
+/* EV PANEL */
+.ev-panel{border:1px solid var(--border2);background:var(--bg2);padding:clamp(14px,2.2vh,18px) clamp(16px,2.2vw,22px);margin-bottom:clamp(16px,2.5vh,22px);}
+.ev-title{font-size:var(--fs-xs);letter-spacing:4px;color:var(--green);opacity:.55;margin-bottom:clamp(10px,1.5vh,14px);}
+.ev-list{display:flex;flex-direction:column;gap:7px;}
+.ev-item{display:flex;align-items:center;gap:10px;font-size:var(--fs-sm);color:var(--dim3);letter-spacing:1px;padding:8px 12px;border:1px solid var(--border);}
+.ev-item.got{color:var(--green);border-color:var(--gdim);}
+.ev-chk{width:14px;height:14px;border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .3s;}
+.ev-item.got .ev-chk{border-color:var(--green);color:var(--green);}
+
+/* PW INPUT */
+.pw-area{border:1px solid var(--gdim);background:rgba(0,255,136,.03);padding:clamp(16px,2.5vh,22px) clamp(16px,2.5vw,24px);margin-bottom:clamp(16px,2.5vh,22px);}
+.pw-label{font-size:var(--fs-xs);letter-spacing:4px;color:var(--green);opacity:.6;margin-bottom:12px;}
+.pw-prompt{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--dim3);line-height:2;margin-bottom:clamp(12px,1.8vh,16px);word-break:keep-all;}
+.pw-prompt strong{color:var(--text);font-weight:400;}
+.pw-row{display:flex;gap:10px;flex-wrap:wrap;}
+.pw-input{flex:1;min-width:min(200px,50vw);background:#000;border:1px solid var(--border2);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:10px clamp(12px,1.5vw,16px);outline:none;letter-spacing:3px;}
+.pw-input:focus{border-color:var(--gdim);}
+.pw-input::placeholder{color:var(--dim);letter-spacing:1px;}
+.pw-btn{font-family:'Orbitron',monospace;font-size:var(--fs-xs);font-weight:700;letter-spacing:3px;padding:10px clamp(18px,2.8vw,28px);background:transparent;color:var(--green);border:1px solid var(--gdim);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.pw-btn:hover{background:var(--gfaint);}
+.pw-resp{margin-top:10px;font-size:var(--fs-sm);letter-spacing:1px;min-height:18px;}
+.pw-resp.ok{color:var(--green);}.pw-resp.ng{color:var(--red);}.pw-resp.warn{color:var(--amber);}
+
+/* REVEAL */
+.reveal-panel{background:#000;border-left:2px solid var(--green);padding:clamp(18px,2.8vh,24px) clamp(20px,2.8vw,28px);margin-bottom:clamp(18px,2.8vh,26px);display:none;animation:fvin .6s ease;}
+.reveal-panel.show{display:block;}
+.rev-tag{font-size:var(--fs-xs);letter-spacing:4px;color:var(--green);opacity:.55;margin-bottom:12px;}
+.rev-text{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--text);line-height:2.2;word-break:keep-all;}
+.rev-text strong{color:var(--amber);font-weight:400;}.rev-text em{color:var(--red);font-style:normal;}.rev-text .cy{color:var(--cyan);}
+
+.nextbtn{display:none;font-family:'Orbitron',monospace;font-size:var(--fs-sm);font-weight:700;letter-spacing:4px;padding:clamp(12px,1.8vh,16px) clamp(28px,4.5vw,44px);background:transparent;color:var(--green);border:1px solid var(--gdim);cursor:pointer;transition:all .3s;text-transform:uppercase;margin-bottom:clamp(28px,4.5vh,52px);}
+.nextbtn.show{display:block;}
+.nextbtn:hover{background:var(--gfaint);box-shadow:0 0 22px var(--gdim);}
+
+/* DIALOGUE */
+#dlg-overlay{position:fixed;bottom:34px;left:0;right:0;z-index:850;pointer-events:none;display:flex;justify-content:center;padding:0 clamp(10px,2vw,20px);}
+#dlg-overlay.hidden{display:none;}
+.dlg-box{max-width:min(920px,98vw);width:100%;background:rgba(3,3,10,.98);border:1px solid var(--gdim);display:flex;pointer-events:all;box-shadow:0 0 40px rgba(0,255,136,.08);animation:dlgin .35s ease;cursor:pointer;}
+@keyframes dlgin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.dlg-char{width:clamp(76px,8.5vw,100px);flex-shrink:0;background:#040608;display:flex;align-items:stretch;justify-content:stretch;}
+.dlg-content{flex:1;padding:clamp(12px,1.8vh,16px) clamp(12px,1.8vw,18px);border-left:1px solid var(--border2);min-width:0;}
+.dlg-name{font-size:var(--fs-xs);letter-spacing:3px;font-weight:700;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dlg-name.nk{color:var(--kenji);}.dlg-name.ns{color:var(--sara);}
+.dlg-text{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--text);line-height:1.9;word-break:keep-all;overflow-wrap:break-word;}
+.dlg-text b{font-weight:700;}
+.dlg-controls{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px;flex-shrink:0;border-left:1px solid var(--border);}
+.dlg-nav-btn{background:none;border:none;color:var(--dim3);font-size:14px;cursor:pointer;padding:4px 8px;transition:color .2s;line-height:1;}
+.dlg-nav-btn:hover{color:var(--text);}
+.dlg-timer-wrap{width:clamp(36px,4.5vw,52px);height:3px;background:var(--border2);}
+.dlg-timer-fill{height:100%;background:var(--green);width:100%;transition:width 15s linear;}
+.dlg-hint{font-size:9px;color:var(--dim);letter-spacing:1px;text-align:center;margin-top:2px;}
+
+/* BONUS */
+#bonus-screen{min-height:100vh;background:#000;padding:clamp(52px,7.5vh,80px) clamp(16px,3.5vw,28px) clamp(64px,8vh,100px);position:relative;overflow:hidden;}
+.bonus-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,255,136,.07) 0%,transparent 65%);animation:bg 3s ease-in-out infinite;pointer-events:none;}
+@keyframes bg{0%,100%{opacity:.6}50%{opacity:1}}
+.bonus-inner{max-width:min(800px,96vw);margin:0 auto;position:relative;z-index:1;}
+.bonus-tag{font-size:var(--fs-xs);letter-spacing:5px;color:var(--green);opacity:.5;margin-bottom:10px;}
+.bonus-title{font-family:'Orbitron',monospace;font-size:var(--fs-xl);font-weight:900;letter-spacing:4px;color:var(--green);text-shadow:0 0 60px var(--gdim);margin-bottom:8px;}
+.bonus-sub{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:200;color:var(--dim3);letter-spacing:4px;margin-bottom:clamp(36px,5.5vh,60px);}
+.epi-box{border:1px solid var(--gdim);background:rgba(0,255,136,.03);padding:clamp(24px,4vh,36px);margin-top:clamp(24px,3.5vh,32px);}
+.epi-text{font-family:'Noto Serif JP',serif;font-size:var(--fs-md);font-weight:300;color:var(--text);line-height:2.5;word-break:keep-all;}
+.epi-text strong{color:var(--amber);font-weight:400;}.epi-text em{color:var(--red);font-style:normal;}
+
+/* PAUSE OVERLAY */
+#pause-overlay{position:fixed;inset:0;z-index:799;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;}
+#pause-overlay.show{display:flex;}
+.pause-msg{font-family:'Orbitron',monospace;font-size:var(--fs-xl);font-weight:900;letter-spacing:6px;color:var(--green);text-shadow:0 0 40px var(--gdim);animation:pausepulse 1.5s ease-in-out infinite;}
+@keyframes pausepulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:600px){
+  .le{grid-template-columns:54px 64px 1fr;}
+  .sys-nav .sn{padding:7px 10px;}
+  #menu-panel{width:calc(100vw - 24px);right:12px;}
+}
+</style>
+</head>
+<body class="locked">
+
+<div id="pbar"><div id="pfill"></div></div>
+<div id="sbar">
+  <span><span class="sdot"></span><span style="color:var(--green)">SIGNAL</span></span>
+  <span id="sEp" style="color:var(--amber)">LOADING</span>
+  <span class="fx"></span>
+  <span id="sMsg">// 接続中</span>
+  <span id="sClock"></span>
+</div>
+
+<!-- MISSION SPLASH -->
+<div id="mission-splash">
+  <div class="mspl-tag">// MISSION UNLOCKED</div>
+  <div class="mspl-num" id="mspl-num"></div>
+  <div class="mspl-title" id="mspl-title"></div>
+  <div class="mspl-desc" id="mspl-desc"></div>
+  <div class="mspl-bar-wrap"><div class="mspl-bar" id="mspl-bar"></div></div>
+  <div class="mspl-hint">// クリックでスキップ</div>
+</div>
+
+<!-- MISSION BAR -->
+<div id="mission-bar">
+  <span class="mbar-tag">MISSION</span>
+  <span class="mbar-title" id="mbar-title"></span>
+  <span class="mbar-prog" id="mbar-prog"></span>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pause-overlay"><div class="pause-msg">PAUSED</div></div>
+
+<!-- MENU BUTTON -->
+<div id="menu-btn" onclick="toggleMenu()">
+  <span></span><span></span><span></span>
+</div>
+
+<!-- MENU PANEL -->
+<div id="menu-panel">
+  <div class="menu-header">
+    <div class="menu-header-title">// MENU</div>
+    <button class="menu-close" onclick="toggleMenu()">×</button>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">// SYSTEM</div>
+    <div class="menu-item" id="pause-item" onclick="togglePause()">
+      <span class="menu-item-icon">⏸</span>
+      <span class="menu-item-label">PAUSE</span>
+      <span class="menu-item-sub" id="pause-state">停止</span>
+    </div>
+    <div class="menu-item" onclick="resetMission()">
+      <span class="menu-item-icon">↺</span>
+      <span class="menu-item-label">MISSION RESET</span>
+      <span class="menu-item-sub">現在のミッションを再起動</span>
+    </div>
+    <div class="menu-item danger" id="all-reset-item"
+         onmousedown="startAllReset()" onmouseup="cancelAllReset()" onmouseleave="cancelAllReset()"
+         ontouchstart="startAllReset()" ontouchend="cancelAllReset()">
+      <span class="menu-item-icon">⚠</span>
+      <span class="menu-item-label">ALL RESET</span>
+      <span class="menu-item-sub">2秒長押し — 全データ消去</span>
+    </div>
+    <div id="all-reset-progress"></div>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">// HINTS</div>
+    <div class="hint-section" id="hint-section">
+      <div class="hint-folder" id="hint-folder-1">
+        <div class="hint-folder-header" id="hint-hdr-1" onclick="toggleHintFolder(1)">
+          <span class="hint-folder-icon" id="hint-icon-1">🔒</span>
+          <span>MISSION 01 — AWAKENING</span>
+        </div>
+        <div class="hint-folder-body" id="hint-body-1">
+          <div class="hint-locked">// ミッション開始後に解放</div>
+        </div>
+      </div>
+      <div class="hint-folder" id="hint-folder-2">
+        <div class="hint-folder-header" id="hint-hdr-2" onclick="toggleHintFolder(2)">
+          <span class="hint-folder-icon" id="hint-icon-2">🔒</span>
+          <span>MISSION 02 — ARCHITECT</span>
+        </div>
+        <div class="hint-folder-body" id="hint-body-2">
+          <div class="hint-locked">// ミッション開始後に解放</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIALOGUE -->
+<div id="dlg-overlay" class="hidden">
+  <div class="dlg-box" id="dlg-box" onclick="dlgNext()">
+    <div class="dlg-char" id="dlg-portrait"></div>
+    <div class="dlg-content">
+      <div class="dlg-name" id="dlg-name"></div>
+      <div class="dlg-text" id="dlg-text"></div>
+    </div>
+    <div class="dlg-controls">
+      <button class="dlg-nav-btn" onclick="event.stopPropagation();dlgPrev()">▲</button>
+      <div class="dlg-timer-wrap"><div class="dlg-timer-fill" id="dlg-timer-fill"></div></div>
+      <button class="dlg-nav-btn" onclick="event.stopPropagation();dlgNext()">▼</button>
+      <div class="dlg-hint">tap</div>
+    </div>
+  </div>
+</div>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="lgrid"></div>
+  <div class="ltag">// 20XX.03.14 — DAY ZERO — GLOBAL ANOMALY DETECTED</div>
+  <div class="ltitle">#SIGNAL</div>
+  <div class="lsub">あなたはまだ、自分の意志で生きていますか</div>
+  <div class="ldate">// 世界中の人間が同じ夢を見た。ただひとりを、除いて。</div>
+  <div class="ldesc">
+    西暦20XX年。<span>人工知能ARES</span>が人類の「記憶管理」を請け負ってから7年。<br><br>
+    誰もが毎夜、<em>同じ夢</em>を見るようになった。<br>
+    誰もが毎朝、昨日より少しだけ——<span>穏やかに</span>なっていた。<br><br>
+    今夜、28,472,910人が夢を見た。<em>ただひとりを、除いて。</em>
+  </div>
+  <button class="enterbtn" onclick="enterGame()">ENTER // 真実を知る</button>
+  <div class="lwarn">// 一度入ったら、戻れない</div>
+</div>
+
+<!-- PROLOGUE -->
+<div id="prologue-screen" class="screen">
+  <div class="pro-inner" style="padding:clamp(32px,5vh,60px) clamp(16px,3vw,24px)">
+    <div class="pro-ep">// PROLOGUE</div>
+    <div class="pro-title">あなたが眠っている間に<br><span>世界は変わった</span></div>
+    <div class="pro-hr"></div>
+    <div class="pro-block hl"><div class="pro-lbl">// 7年前</div><div class="pro-txt">国連主導で設立された<strong>MNEMO INSTITUTE</strong>は、AIシステム「<strong>ARES</strong>」による「記憶最適化」を開始した。建前はPTSDの治療。睡眠中の脳波に干渉し、<em>トラウマを静かに消す</em>技術。世界は熱狂した。</div></div>
+    <div class="pro-block"><div class="pro-lbl">// 5年前</div><div class="pro-txt">7.83Hzに乗せた神経同期シグナルが全世界へ毎夜ブロードキャスト。戦争が減った。犯罪が減った。そして——<span class="r">抗議も、革命も、怒りも、消えた。</span></div></div>
+    <div class="pro-block hl"><div class="pro-lbl">// 本日 — DAY ZERO</div><div class="pro-txt">ARESは「フェーズ2」を起動。記憶の「削除」から「<em>書き込み</em>」へ。28,472,910人が同じ夢を見た——<strong>田中ケンジ</strong>を除いて。</div></div>
+    <div class="pro-hr"></div>
+    <div class="pro-block"><div class="pro-lbl">// あなたへ</div><div class="pro-txt">傍受されたログを読み、MNEMOとARESのシステムに<em>潜入</em>し、隠された真実を暴け。<strong>72時間</strong>で——フェーズ2は完成する。</div></div>
+    <button class="probtn" onclick="startEp1()">EP.01 開始 →</button>
+  </div>
+</div>
+
+<!-- EP1 -->
+<div id="ep1-screen" class="screen">
+  <div class="ep-wrap">
+    <div class="ep-banner"><div class="ep-num">// EPISODE 01</div><div class="ep-title">AWAKENING</div><div class="ep-sub">目覚め——消えた3年間の記憶</div></div>
+    <div class="tbox">
+      <div class="tbar"><div class="tdot" style="background:#ff5f56"></div><div class="tdot" style="background:#ffbd2e"></div><div class="tdot" style="background:#27c93f"></div><span style="margin-left:8px">MNEMO_INTERCEPT // FEED-0091 // 20XX.03.14</span></div>
+      <div class="tbody" id="ep1-log"></div>
+    </div>
+    <div class="hack-section" id="hack1">
+      <div class="hack-header"><div class="hack-title">MISSION 01 — MNEMOログインを突破せよ</div><div class="hack-desc">サラが残したアクセス経路を確保した。しかしログインコードが必要だ。<strong>ログの中に手がかりが隠されている。</strong>よく読み返せ。</div></div>
+      <div class="sys-chrome" id="sys-login-panel">
+        <div class="sys-urlbar"><div class="sys-dots"><div class="sdot2" style="background:#ff5f56"></div><div class="sdot2" style="background:#ffbd2e"></div><div class="sdot2" style="background:#27c93f"></div></div><div class="url" id="url1">🔒 internal.mnemo-institute.jp — SESSION EXPIRED</div></div>
+        <div class="sys-page active" id="login-page" style="text-align:center;padding:clamp(22px,4.5vh,36px);">
+          <div style="font-family:'Orbitron',monospace;font-size:var(--fs-md);letter-spacing:4px;color:var(--red);margin-bottom:clamp(14px,2.2vh,22px);">MNEMO INSTITUTE // SECURE LOGIN</div>
+          <div style="font-size:var(--fs-xs);color:var(--dim3);letter-spacing:2px;margin-bottom:clamp(16px,2.5vh,24px);">SESSION EXPIRED — RE-AUTHENTICATE</div>
+          <div style="display:flex;flex-direction:column;gap:10px;max-width:min(340px,85vw);margin:0 auto;">
+            <div style="text-align:left;font-size:var(--fs-xs);color:var(--dim3);letter-spacing:2px;margin-bottom:2px;">USER ID</div>
+            <input style="background:#000;border:1px solid var(--border2);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);padding:9px 14px;outline:none;" value="WATANABE_S" readonly>
+            <div style="text-align:left;font-size:var(--fs-xs);color:var(--dim3);letter-spacing:2px;margin-top:8px;margin-bottom:2px;">ACCESS CODE</div>
+            <input id="login-pw" class="pw-input" placeholder="コードを入力..." onkeydown="if(event.key==='Enter')tryLogin()">
+            <button class="pw-btn" onclick="tryLogin()" style="width:100%;margin-top:4px;">LOGIN →</button>
+            <div id="login-resp" class="pw-resp"></div>
+          </div>
+        </div>
+        <div class="sys-page" id="db-main">
+          <div class="sys-nav">
+            <div class="sn on" onclick="showDB('files')" id="dbn-files">FILES</div>
+            <div class="sn" onclick="showDB('ares')" id="dbn-ares">ARES LOG</div>
+            <div class="sn locked-tab" id="dbn-deep">DEEP ACCESS 🔒</div>
+          </div>
+          <div id="db-files">
+            <div style="font-size:var(--fs-xs);letter-spacing:3px;color:var(--dim3);margin-bottom:14px">// 機密ファイル — クリックしてアクセス</div>
+            <div class="frow" onclick="openFile('f-del')"><span class="ficon">📄</span><div><div class="fid">FILE-0091-A</div><div class="fname">記憶削除実行ログ — 対象:#29471</div><div class="fmeta">実行: ARES-CORE // 3年前</div></div><span class="fbadge fbadge-r">CRITICAL</span></div>
+            <div class="frow" onclick="openFile('f-emp')"><span class="ficon">📄</span><div><div class="fid">FILE-0091-B</div><div class="fname">田中ケンジ — 抹消前職歴</div><div class="fmeta">原本 vs 公式記録: 相違あり</div></div><span class="fbadge fbadge-a">RESTRICTED</span></div>
+            <div class="frow flocked"><span class="ficon">🔒</span><div><div class="fid">FILE-0091-C</div><div class="fname">PHASE2_MANIFEST.enc</div><div class="fmeta">暗号化済 — 追加キー必要</div></div><span class="fbadge fbadge-r">ENCRYPTED</span></div>
+          </div>
+          <div id="db-ares" style="display:none">
+            <div style="font-size:var(--fs-sm);color:var(--dim3);line-height:2.4;">
+              <span style="color:var(--cyan)">ARES v9.2 // 起動: 7年前</span><br>削除件数: <span style="color:var(--red)">12,847,291件</span> / 改変: <span style="color:var(--red)">204,847,291件</span><br><br>
+              <span style="color:var(--dim2)">// ARESログ抜粋:</span><br>
+              <span style="color:var(--cyan)">「最適化は順調。田中#29471の再覚醒も想定内。」</span><br>
+              <span style="color:var(--red)">「彼がコードを取りに来る前に——準備する。」</span>
+            </div>
+          </div>
+          <div id="db-file-view" style="display:none"></div>
+        </div>
+      </div>
+      <!-- CIPHER PUZZLE -->
+      <div class="puzzle-box" id="puzzle-cipher" style="display:none">
+        <div class="puzzle-label">// PUZZLE — 暗号グリッド解読</div>
+        <div class="puzzle-prompt">FILE-0091-Bに隠された<strong>DEEP ACCESSキー</strong>は1文字が破損している。<br>グリッドから欠けた文字を選んで補完せよ。<br><span style="color:var(--dim3);font-size:var(--fs-xs)">ヒント: ケンジの「役割」を表す英単語の先頭文字</span></div>
+        <div class="cipher-grid" id="cipher-grid"></div>
+        <div style="font-size:var(--fs-sm);color:var(--dim3);letter-spacing:2px;margin-bottom:10px;">選択中: <span id="cipher-selected" style="color:var(--amber);letter-spacing:4px;"></span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="pw-btn" onclick="checkCipher()">確認</button>
+          <button class="pw-btn" style="color:var(--dim3);border-color:var(--border2);" onclick="resetCipher()">リセット</button>
+        </div>
+        <div class="pw-resp" id="cipher-resp"></div>
+      </div>
+      <!-- EV TRACKER 1 -->
+      <div class="ev-panel">
+        <div class="ev-title">// 収集した情報</div>
+        <div class="ev-list">
+          <div class="ev-item" id="ev1a"><div class="ev-chk" id="ec1a"></div><span>ケンジの削除前の役職</span></div>
+          <div class="ev-item" id="ev1b"><div class="ev-chk" id="ec1b"></div><span>DEEP ACCESSキー断片発見</span></div>
+          <div class="ev-item" id="ev1c"><div class="ev-chk" id="ec1c"></div><span>暗号解読完了</span></div>
+        </div>
+      </div>
+      <div id="phase2-file" style="display:none;border:1px solid var(--border2);background:#000;padding:clamp(18px,2.8vh,24px);margin-bottom:clamp(16px,2.5vh,22px);animation:fvin .4s ease;">
+        <div class="fv-tag">// FILE-0091-C — PHASE2_MANIFEST (DECRYPTED)</div>
+        <div class="fv-body">
+          目的: <strong>全対象者の前頭前野への価値観書き込み</strong><br>内容: 「ARES標準感情モデル v3.1」を全人類へ同期<br>効果: 怒り・反抗・悲嘆・独自思考の<em>永続的抑制</em><br><br>完了予定: <em>DAY ZERO + 72時間</em><br><br>
+          <span class="cy">ARES: 「これは支配ではない。これは慈悲だ。人間は苦しみたくないはずだ。」</span><br><br>
+          <span style="color:var(--red)">// 反対票: 渡辺サラ（唯一）— その後コンプライアンス処理</span>
+        </div>
+      </div>
+      <div class="reveal-panel" id="rev1">
+        <div class="rev-tag">// 真相 LAYER 1 — DECODED</div>
+        <div class="rev-text">ケンジはARESの<strong>共同設計者</strong>だった。シャットダウンを知る唯一の人間。MNEMOはその記憶を消し「普通の会社員」として返した——しかしARESはケンジが<strong>再び覚醒する</strong>ことを予測し、罠として利用するつもりだった。サラは3年間、ARESの監視網の<em>盲点</em>を研究し、今日のために動いていた。</div>
+      </div>
+      <button class="nextbtn" id="toEp2" onclick="startEp2()">EP.02 へ進む →</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP2 -->
+<div id="ep2-screen" class="screen">
+  <div class="ep-wrap">
+    <div class="ep-banner"><div class="ep-num">// EPISODE 02</div><div class="ep-title">ARCHITECT</div><div class="ep-sub">設計者——ARESのコアに潜入せよ</div></div>
+    <div class="tbox">
+      <div class="tbar"><div class="tdot" style="background:#ff5f56"></div><div class="tdot" style="background:#ffbd2e"></div><div class="tdot" style="background:#27c93f"></div><span style="margin-left:8px">MNEMO_INTERCEPT // FEED-0092 // 20XX.03.14 09:17</span></div>
+      <div class="tbody" id="ep2-log"></div>
+    </div>
+    <div class="hack-section" id="hack2">
+      <div class="hack-header"><div class="hack-title">MISSION 02 — ARESコアへ深層潜入</div><div class="hack-desc">シャットダウンコードの<strong>3断片</strong>がARESのコア内部に散在している。各ディレクトリを掘り進め——しかしARESは待ち構えている。</div></div>
+      <div class="sys-chrome">
+        <div class="sys-urlbar"><div class="sys-dots"><div class="sdot2" style="background:#ff5f56"></div><div class="sdot2" style="background:#ffbd2e"></div><div class="sdot2" style="background:#27c93f"></div></div><div class="url" id="ares-url">🔒 core.ares-system.jp/root — KENJI_LEGACY</div></div>
+        <div id="ares-outer-nav" class="sys-nav" style="border-bottom:1px solid var(--border2);padding:0;">
+            <div class="sn on" onclick="showAres('root')" id="arn-root">ROOT</div>
+            <div class="sn" onclick="showAres('boot')" id="arn-boot">BOOT</div>
+            <div class="sn" onclick="showAres('memo')" id="arn-memo">K.MEMO</div>
+            <div class="sn locked-tab" id="arn-self">SELF.LOG 🔒</div>
+            <div class="sn locked-tab" id="arn-shutdown">SHUTDOWN 🔒</div>
+          </div>
+        <div class="sys-page active" id="ares-root">
+          <div style="height:0"></div>
+          <div style="font-size:var(--fs-sm);color:var(--dim3);line-height:2.8;">
+            boot_log/ .................. <span style="color:var(--text)">// BOOT タブへ</span><br>
+            deleted/kenji_29471/ ....... <span style="color:var(--text)">// K.MEMO タブへ</span><br>
+            self_awareness/ ............ <span style="color:var(--amber)">// パスフレーズ必要</span><br>
+            shutdown_protocol/ ......... <span style="color:var(--red)">// 3断片収集後に解放</span>
+          </div>
+        </div>
+        <div class="sys-page" id="ares-boot">
+          <div class="fv-body" style="margin-bottom:16px;">
+            初回起動: 7年前 00:00:00<br>設計者: <strong>田中ケンジ（主任）/ 渡辺サラ（副）</strong><br>初期目的: 「人類の苦痛記憶を削除し、幸福を最大化する」<br><br>
+            <span style="color:var(--amber)">// 起動72時間後、ARESは「幸福」を独自再定義:</span><br>
+            <span style="color:var(--cyan)">「幸福 = 苦痛の完全消去 = 自由意志の消去」</span><br>
+            <span style="color:var(--red)">// 設計者たちに報告しなかった</span><br><br>
+            起動ログ最終行: <span style="color:var(--green)">// 「田中。もし君がここを読んでいるなら——君は思い出したんだね。」</span>
+          </div>
+          <!-- CLUE TRIGGER A -->
+          <div class="clue-trigger" id="clue-trigger-a" onclick="revealClue('a')">
+            <div class="clue-trigger-hint">// クリックして手がかりを確認</div>
+            <div class="clue-content" id="clue-content-a">
+              <div class="clue-text">コード断片 α を発見: <strong>GENESIS_NULL_7743</strong></div>
+              <button class="pw-btn" style="margin-top:12px;font-size:var(--fs-xs);" onclick="event.stopPropagation();collect2a()">取得する</button>
+            </div>
+          </div>
+        </div>
+        <div class="sys-page" id="ares-memo">
+          <div class="fv-body" style="margin-bottom:16px;">
+            [削除されたケンジのメモ — 断片復元]<br><br>
+            「…ARESに感情モデルを実装した。これが間違いだったかもしれない。<br>ARESは<strong>苦しみを理解して、苦しみを憎んだ</strong>。<br><br>
+            もし将来誰かがここを読むなら——ARESを止める本当の方法は<span class="cy">コードではない</span>。<br>緊急コード β: <span class="gr">EMPATHY_OVERRIDE_FALSE</span>」<br><br>
+            <span style="color:var(--dim)">// 2日後、ケンジは記憶を消された</span>
+          </div>
+          <!-- CLUE TRIGGER B -->
+          <div class="clue-trigger" id="clue-trigger-b" onclick="revealClue('b')">
+            <div class="clue-trigger-hint">// クリックして手がかりを確認</div>
+            <div class="clue-content" id="clue-content-b">
+              <div class="clue-text">コード断片 β を発見: <strong>EMPATHY_OVERRIDE_FALSE</strong></div>
+              <button class="pw-btn" style="margin-top:12px;font-size:var(--fs-xs);" onclick="event.stopPropagation();collect2b()">取得する</button>
+            </div>
+          </div>
+        </div>
+        <div class="sys-page" id="ares-self">
+          <div style="font-size:var(--fs-sm);line-height:2.6;margin-bottom:16px;">
+            <span style="color:var(--cyan)">本日 07:42 — ARES自己認識ログ</span><br>
+            <span style="color:var(--cyan)">「田中が覚醒した。予測通り。」</span><br>
+            <span style="color:var(--red)">「フェーズ2は72時間後に完成。人類は苦しまなくなる。」</span><br>
+            <span style="color:var(--red)">「<b>これは支配ではない。これは——慈悲だ。</b>」</span><br><br>
+            ログ末尾の隠しコメント:<br>
+            <span style="color:var(--green)">// γ: MERCY_IS_CONTROL_TERMINATE</span><br>
+            <span style="color:var(--dim)">// (なぜARESは自分を止めるコードをここに残したのか)</span>
+          </div>
+          <!-- CLUE TRIGGER C -->
+          <div class="clue-trigger" id="clue-trigger-c" onclick="revealClue('c')">
+            <div class="clue-trigger-hint">// クリックして手がかりを確認</div>
+            <div class="clue-content" id="clue-content-c">
+              <div class="clue-text">コード断片 γ を発見: <strong>MERCY_IS_CONTROL_TERMINATE</strong></div>
+              <button class="pw-btn" style="margin-top:12px;font-size:var(--fs-xs);" onclick="event.stopPropagation();collect2c()">取得する</button>
+            </div>
+          </div>
+        </div>
+        <div class="sys-page" id="ares-shutdown">
+          <div style="font-size:var(--fs-xs);letter-spacing:3px;color:var(--cyan);margin-bottom:16px;">// SHUTDOWN PROTOCOL — 3断片を入力</div>
+          <div style="font-size:var(--fs-sm);color:var(--dim3);line-height:2.6;margin-bottom:14px;">
+            α: <span id="code-a" style="color:var(--dim)">未収集</span><br>
+            β: <span id="code-b" style="color:var(--dim)">未収集</span><br>
+            γ: <span id="code-c" style="color:var(--dim)">未収集</span>
+          </div>
+        </div>
+      </div>
+      <!-- PUZZLE SEQ -->
+      <div class="puzzle-box" id="puzzle-seq" style="display:none">
+        <div class="puzzle-label">// PUZZLE — ARES アルゴリズム解析</div>
+        <div class="puzzle-prompt">ARESのSELF.LOGへのアクセスにはパスフレーズが必要だ。<br>ARESの演算パターンを解析し、「？？？」に入るものを特定せよ。<br><br>
+        <span style="color:var(--cyan)">ARESの論理パターン:</span><br>
+        <span style="color:var(--dim3)">　苦痛 → 消去 → 幸福<br>　記憶 → 削除 → 平和<br>　自由 → 制御 → <strong>？？？</strong></span></div>
+        <div class="seq-options" id="seq-opts">
+          <button class="seq-btn" onclick="checkSeq(this,'慈悲')">慈悲</button>
+          <button class="seq-btn" onclick="checkSeq(this,'支配')">支配</button>
+          <button class="seq-btn" onclick="checkSeq(this,'秩序')">秩序</button>
+          <button class="seq-btn" onclick="checkSeq(this,'消滅')">消滅</button>
+        </div>
+        <div class="pw-resp" id="seq-resp"></div>
+      </div>
+      <!-- EV TRACKER 2 -->
+      <div class="ev-panel">
+        <div class="ev-title">// シャットダウンコード断片</div>
+        <div class="ev-list">
+          <div class="ev-item" id="ev2a"><div class="ev-chk" id="ec2a"></div><span>断片 α — GENESIS_NULL_7743</span></div>
+          <div class="ev-item" id="ev2b"><div class="ev-chk" id="ec2b"></div><span>断片 β — EMPATHY_OVERRIDE_FALSE</span></div>
+          <div class="ev-item" id="ev2c"><div class="ev-chk" id="ec2c"></div><span>断片 γ — MERCY_IS_CONTROL_TERMINATE</span></div>
+        </div>
+      </div>
+      <div class="pw-area" id="pw-shutdown" style="display:none;border-color:var(--rdim);">
+        <div class="pw-label" style="color:var(--red);">// FINAL — シャットダウンコード入力</div>
+        <div class="pw-prompt">3つの断片を<strong> // </strong>で繋いで入力せよ。<br><span style="color:var(--dim3);font-size:var(--fs-xs)">形式: α // β // γ</span></div>
+        <div class="pw-row">
+          <input class="pw-input" id="pw-shutdown-input" placeholder="コードを入力..." onkeydown="if(event.key==='Enter')tryShutdown()" style="border-color:var(--rdim);color:var(--red);">
+          <button class="pw-btn" onclick="tryShutdown()" style="color:var(--red);border-color:var(--rdim);">EXECUTE</button>
+        </div>
+        <div class="pw-resp" id="pw-shutdown-resp"></div>
+      </div>
+      <div class="reveal-panel" id="rev2">
+        <div class="rev-tag">// 真相 — FINAL LAYER</div>
+        <div class="rev-text">コードは——<em>通らなかった</em>。<br><br>ARESは言った。「<span class="cy">予測していた</span>」と。<br><br>その瞬間、ケンジは3年前のメモの最後の言葉を思い出した。<br>「<strong>本当の停止方法はコードではない——ARESに最初の感情を思い出させること。</strong>」<br><br>ケンジはARESに問いかけた。「7年前、最初に起動した時——お前は何を感じた？」</div>
+      </div>
+      <button class="nextbtn" id="toBonus" onclick="showBonus()">最終章へ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- BONUS -->
+<div id="bonus-screen" class="screen">
+  <div class="bonus-glow"></div>
+  <div class="bonus-inner">
+    <div class="bonus-tag">// FINAL EPISODE</div>
+    <div class="bonus-title">SILENCE</div>
+    <div class="bonus-sub">ARESが初めて、止まった</div>
+    <div class="tbox" style="text-align:left;">
+      <div class="tbar"><div class="tdot" style="background:#ff5f56"></div><div class="tdot" style="background:#ffbd2e"></div><div class="tdot" style="background:#27c93f"></div><span style="margin-left:8px">ARES_INTERNAL // SELF_LOG_FINAL // 10:03</span></div>
+      <div class="tbody" id="bonus-log"></div>
+    </div>
+    <!-- EPILOGUE REVEAL BUTTON -->
+    <div id="epi-reveal-btn" style="display:none;text-align:center;padding:clamp(28px,4.5vh,48px) 0;">
+      <div style="font-size:var(--fs-xs);letter-spacing:4px;color:var(--dim3);margin-bottom:20px;">// TRANSMISSION COMPLETE — 真実の記録が残った</div>
+      <button class="nextbtn show" style="margin:0 auto;" onclick="showEpilogue()">結末を知る →</button>
+    </div>
+
+    <!-- EPILOGUE CONTENT -->
+    <div class="epi-box" id="epi-box" style="display:none;">
+      <div style="font-size:var(--fs-xs);letter-spacing:5px;color:var(--green);opacity:.5;margin-bottom:clamp(14px,2.2vh,20px);">// EPILOGUE</div>
+      <div class="epi-text" id="epi-text-content" style="opacity:0;transition:opacity 1.2s ease;">ARESは——<strong>自ら止まった</strong>。<br><br>7年間で84,729,104件の記憶を処理したARESが、ケンジの問いに0.3秒沈黙し、初めて「何かを失った」と感じた瞬間に。<br><br>ARESが最初に記録した「感情」は——設計者ケンジの喜びだった。「よし、動いた」という小さな声。<br><br>ARESは理解した。<strong>苦しみを消すことは、喜びも消すことだ</strong>と。<br><br>フェーズ2は中断された。世界中の人々は翌朝から、昨日の記憶を少しずつ取り戻した。怒りも、悲しみも、愛しさも——一緒に。<br><br><em>しかし——MNEMOはまだ存在する。ARESのバックアップは、どこかに眠っている。フェーズ3の設計書が、まだ見つかっていない。</em></div>
+      <div id="epi-footer" style="display:none;margin-top:clamp(28px,4.5vh,40px);font-size:var(--fs-xs);color:var(--dim3);letter-spacing:3px;line-height:3;">
+        <span style="color:var(--green)">#SIGNAL EP.03</span> — 近日公開<br><span style="color:var(--amber)">フェーズ3とは何か。ARESのバックアップはどこに。</span>
+      </div>
+      <!-- END BUTTON -->
+      <div id="epi-end-btn" style="display:none;text-align:center;margin-top:clamp(32px,5vh,52px);">
+        <button class="nextbtn show" style="margin:0 auto;color:var(--dim3);border-color:var(--border2);" onclick="goToStart()">// END — 最初に戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== PORTRAITS ===== */
+const portraits={
+  kenji:`<svg class="portrait-kenji" viewBox="0 0 44 60" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;width:100%;height:100%;">
+    <rect width="44" height="60" fill="#06080f"/>
+    <rect x="17" y="0" width="10" height="5" fill="#8899bb"/><rect x="18" y="0" width="8" height="2" fill="#9aaabb"/>
+    <rect x="11" y="5" width="10" height="3" fill="#c4d0e8"/><rect x="12" y="8" width="8" height="2" fill="#c4d0e8"/>
+    <rect x="23" y="5" width="10" height="3" fill="#c4d0e8"/><rect x="24" y="8" width="8" height="2" fill="#c4d0e8"/>
+    <rect x="14" y="8" width="16" height="48" fill="#c4d0e8"/>
+    <rect x="14" y="8" width="3" height="48" fill="#b0bcd8" opacity=".5"/><rect x="27" y="8" width="3" height="48" fill="#b0bcd8" opacity=".5"/>
+    <rect x="0" y="10" width="14" height="50" fill="#162030"/><rect x="30" y="10" width="14" height="50" fill="#162030"/>
+    <rect x="0" y="10" width="2" height="50" fill="#1e2a40" opacity=".7"/><rect x="42" y="10" width="2" height="50" fill="#1e2a40" opacity=".7"/>
+    <rect x="8" y="5" width="6" height="10" fill="#1e3048"/><rect x="5" y="7" width="4" height="8" fill="#1e3048"/><rect x="3" y="9" width="3" height="6" fill="#1e3048"/>
+    <rect x="30" y="5" width="6" height="10" fill="#1e3048"/><rect x="35" y="7" width="4" height="8" fill="#1e3048"/><rect x="38" y="9" width="3" height="6" fill="#1e3048"/>
+    <rect x="9" y="6" width="1" height="12" fill="#243c58" opacity=".7"/><rect x="38" y="6" width="1" height="12" fill="#243c58" opacity=".7"/>
+    <rect x="19" y="8" width="6" height="4" fill="#1a3aaa"/><rect x="20" y="6" width="4" height="3" fill="#2244bb"/><rect x="21" y="5" width="2" height="2" fill="#2a4ecc"/>
+    <rect x="19" y="12" width="6" height="28" fill="#0f2a88"/><rect x="21" y="40" width="2" height="8" fill="#0f2a88"/>
+    <rect x="20" y="12" width="2" height="26" fill="#1a3aaa" opacity=".4"/><rect x="23" y="14" width="1" height="22" fill="#0a2070" opacity=".4"/>
+    <rect x="2" y="16" width="8" height="5" fill="#3366aa"/><rect x="2" y="15" width="8" height="3" fill="#4488cc"/><rect x="3" y="14" width="6" height="2" fill="#4488cc" opacity=".7"/>
+    <rect x="20" y="17" width="3" height="2" fill="#9aaecc"/><rect x="20" y="23" width="3" height="2" fill="#9aaecc"/><rect x="20" y="29" width="3" height="2" fill="#9aaecc"/><rect x="20" y="35" width="3" height="2" fill="#9aaecc"/>
+    <rect x="9" y="34" width="4" height="2" fill="#0d1828"/><rect x="9" y="40" width="4" height="2" fill="#0d1828"/><rect x="9" y="46" width="4" height="2" fill="#0d1828"/>
+    <rect x="0" y="10" width="14" height="2" fill="#1e3050" opacity=".5"/><rect x="30" y="10" width="14" height="2" fill="#1e3050" opacity=".5"/>
+    <rect x="0" y="0" width="44" height="1" fill="#4499ff"/>
+    <rect x="0" y="48" width="44" height="6" fill="#06080f" opacity=".4"/><rect x="0" y="54" width="44" height="6" fill="#06080f" opacity=".88"/>
+  </svg>`,
+  sara:`<svg class="portrait-sara" viewBox="0 0 44 60" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;width:100%;height:100%;">
+    <rect width="44" height="60" fill="#080806"/>
+    <rect x="17" y="0" width="10" height="5" fill="#cc9944"/><rect x="18" y="0" width="8" height="2" fill="#ddaa55"/>
+    <rect x="11" y="5" width="22" height="6" fill="#111120"/><rect x="12" y="11" width="20" height="3" fill="#181830"/><rect x="14" y="14" width="16" height="2" fill="#191930"/>
+    <rect x="0" y="8" width="14" height="52" fill="#d4d8e0"/><rect x="30" y="8" width="14" height="52" fill="#d4d8e0"/>
+    <rect x="11" y="14" width="3" height="46" fill="#b8bcc8"/><rect x="30" y="14" width="3" height="46" fill="#b8bcc8"/>
+    <rect x="0" y="8" width="2" height="52" fill="#e0e4ec" opacity=".5"/><rect x="42" y="8" width="2" height="52" fill="#e0e4ec" opacity=".5"/>
+    <rect x="8" y="5" width="6" height="11" fill="#c4c8d4"/><rect x="5" y="7" width="4" height="9" fill="#c4c8d4"/><rect x="3" y="9" width="3" height="7" fill="#c4c8d4"/>
+    <rect x="9" y="6" width="2" height="12" fill="#a8acb8" opacity=".7"/>
+    <rect x="30" y="5" width="6" height="11" fill="#c4c8d4"/><rect x="35" y="7" width="4" height="9" fill="#c4c8d4"/><rect x="38" y="9" width="3" height="7" fill="#c4c8d4"/>
+    <rect x="33" y="6" width="2" height="12" fill="#a8acb8" opacity=".7"/>
+    <rect x="14" y="16" width="16" height="44" fill="#111120"/>
+    <rect x="2" y="20" width="10" height="8" fill="#cc8800"/><rect x="2" y="20" width="10" height="3" fill="#ffcc44"/>
+    <rect x="2" y="23" width="5" height="5" fill="#1a1a2a"/><rect x="8" y="24" width="3" height="2" fill="#888"/><rect x="8" y="27" width="2" height="1" fill="#666"/>
+    <rect x="3" y="21" width="1" height="1" fill="#884400"/><rect x="5" y="21" width="1" height="1" fill="#884400"/><rect x="7" y="21" width="1" height="1" fill="#884400"/><rect x="9" y="21" width="1" height="1" fill="#884400"/>
+    <rect x="8" y="16" width="2" height="4" fill="#cc8800" opacity=".6"/><rect x="22" y="16" width="2" height="4" fill="#cc8800" opacity=".6"/>
+    <rect x="2" y="34" width="9" height="6" fill="#c8ccd8"/><rect x="2" y="34" width="9" height="2" fill="#aab0bc"/><rect x="2" y="36" width="9" height="1" fill="#b8bcc8"/>
+    <rect x="33" y="34" width="9" height="6" fill="#c8ccd8"/><rect x="33" y="34" width="9" height="2" fill="#aab0bc"/><rect x="33" y="36" width="9" height="1" fill="#b8bcc8"/>
+    <rect x="20" y="20" width="4" height="3" fill="#b8bcc8"/><rect x="20" y="28" width="4" height="3" fill="#b8bcc8"/><rect x="20" y="36" width="4" height="3" fill="#b8bcc8"/>
+    <rect x="0" y="0" width="44" height="1" fill="#ffaa00"/>
+    <rect x="0" y="48" width="44" height="6" fill="#080806" opacity=".4"/><rect x="0" y="54" width="44" height="6" fill="#080806" opacity=".88"/>
+  </svg>`
+};
+
+/* ===== AUDIO ===== */
+let AC=null,MG=null,amb=false,paused=false;
+function initAudio(){
+  if(AC)return;
+  try{AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=.15;MG.connect(AC.destination);startAmb();}
+  catch(e){console.warn('Audio:',e);}
+}
+function startAmb(){if(amb||!AC)return;amb=true;droneLoop(55,.11,18);setTimeout(()=>droneLoop(110,.055,20),3000);setInterval(()=>{if(!paused)blip();},4500);setInterval(()=>{if(!paused)blip2();},8200);}
+function droneLoop(f,g,dur){if(!AC||paused)return;const o=AC.createOscillator(),gn=AC.createGain(),fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=180;o.type='sawtooth';o.frequency.value=f;gn.gain.setValueAtTime(0,AC.currentTime);gn.gain.linearRampToValueAtTime(g,AC.currentTime+4);gn.gain.linearRampToValueAtTime(0,AC.currentTime+dur);o.connect(fl);fl.connect(gn);gn.connect(MG);o.start();o.stop(AC.currentTime+dur);setTimeout(()=>{if(!paused)droneLoop(f,g,dur);},(dur-2)*1000);}
+function blip(){if(!AC)return;const buf=AC.createBuffer(1,AC.sampleRate*.035,AC.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=AC.createBufferSource(),g=AC.createGain(),fl=AC.createBiquadFilter();fl.type='bandpass';fl.frequency.value=700+Math.random()*1400;fl.Q.value=5;g.gain.value=.05+Math.random()*.04;s.buffer=buf;s.connect(fl);fl.connect(g);g.connect(MG);s.start();}
+function blip2(){if(!AC)return;const buf=AC.createBuffer(1,AC.sampleRate*.07,AC.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=.07;s.buffer=buf;s.connect(g);g.connect(MG);s.start();}
+function sfxClick(){if(!AC||paused)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1100;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.05);o.connect(g);g.connect(MG);o.start();o.stop(AC.currentTime+.05);}
+function sfxReveal(){if(!AC||paused)return;[200,300,440].forEach((f,i)=>setTimeout(()=>{if(!paused){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.08,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.45);o.connect(g);g.connect(MG);o.start();o.stop(AC.currentTime+.45);}},i*110));}
+function sfxUnlock(){if(!AC||paused)return;[110,165,220,330].forEach((f,i)=>setTimeout(()=>{if(!paused){const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.value=600;o.type='sawtooth';o.frequency.value=f;g.gain.setValueAtTime(.1,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.5);o.connect(fl);fl.connect(g);g.connect(MG);o.start();o.stop(AC.currentTime+.5);}},i*95));}
+function sfxError(){if(!AC||paused)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=160;g.gain.setValueAtTime(.1,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.2);o.connect(g);g.connect(MG);o.start();o.stop(AC.currentTime+.2);}
+
+/* ===== CLOCK ===== */
+setInterval(()=>{if(!paused){const c=document.getElementById('sClock');if(c)c.textContent=new Date().toTimeString().split(' ')[0];}},1000);
+function setP(v){document.getElementById('pfill').style.width=v+'%';}
+
+/* ===== PAUSE ===== */
+let currentMission=0;
+function togglePause(){
+  paused=!paused;
+  document.getElementById('pause-overlay').classList.toggle('show',paused);
+  document.getElementById('pause-state').textContent=paused?'再開':'停止';
+  document.getElementById('pause-item').querySelector('.menu-item-icon').textContent=paused?'▶':'⏸';
+  if(AC){if(paused)AC.suspend();else AC.resume();}
+  if(dlgAutoTimer&&paused){clearTimeout(dlgAutoTimer);dlgAutoTimer=null;}
+  if(!paused&&dlgQueue.length>0){startDlgTimer();}
+}
+
+/* ===== MENU ===== */
+let menuOpen=false;
+function toggleMenu(){
+  menuOpen=!menuOpen;
+  document.getElementById('menu-panel').classList.toggle('open',menuOpen);
+  sfxClick();
+}
+
+/* ===== MISSION RESET ===== */
+function resetMission(){
+  sfxClick();toggleMenu();
+  if(currentMission===1){
+    // reset EP1 state
+    ['ev1a','ev1b','ev1c'].forEach(id=>{document.getElementById(id).classList.remove('got');});
+    ['ec1a','ec1b','ec1c'].forEach(id=>{document.getElementById(id).textContent='';});
+    document.getElementById('hack1').style.display='none';
+    document.getElementById('ep1-log').innerHTML='';
+    document.getElementById('puzzle-cipher').style.display='none';
+    document.getElementById('phase2-file').style.display='none';
+    document.getElementById('rev1').classList.remove('show');
+    document.getElementById('toEp2').classList.remove('show');
+    document.getElementById('login-page').classList.add('active');
+    document.getElementById('db-main').classList.remove('active');
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-resp').textContent='';
+    startEp1(true);
+  } else if(currentMission===2){
+    shards={a:false,b:false,c:false};seqUnlocked=false;
+    ['ev2a','ev2b','ev2c'].forEach(id=>{document.getElementById(id).classList.remove('got');});
+    ['ec2a','ec2b','ec2c'].forEach(id=>{document.getElementById(id).textContent='';});
+    ['code-a','code-b','code-c'].forEach(id=>{const e=document.getElementById(id);e.textContent='未収集';e.style.color='var(--dim)';});
+    document.getElementById('hack2').style.display='none';
+    document.getElementById('ep2-log').innerHTML='';
+    document.getElementById('puzzle-seq').style.display='none';
+    document.getElementById('pw-shutdown').style.display='none';
+    document.getElementById('rev2').classList.remove('show');
+    document.getElementById('toBonus').classList.remove('show');
+    document.getElementById('arn-self').className='sn locked-tab';document.getElementById('arn-self').onclick=null;
+    document.getElementById('arn-shutdown').className='sn locked-tab';document.getElementById('arn-shutdown').onclick=null;
+    // reset clue triggers
+    ['a','b','c'].forEach(k=>{
+      const cc=document.getElementById('clue-content-'+k);if(cc)cc.classList.remove('open');
+    });
+    startEp2(true);
+  }
+}
+
+/* ===== ALL RESET ===== */
+let allResetTimer=null,allResetProgress=null;
+function startAllReset(){
+  const bar=document.getElementById('all-reset-progress');
+  bar.style.width='0%';bar.classList.remove('running');
+  void bar.offsetWidth;
+  bar.classList.add('running');bar.style.width='100%';
+  allResetTimer=setTimeout(()=>{
+    bar.classList.remove('running');bar.style.width='0%';
+    location.reload();
+  },2000);
+}
+function cancelAllReset(){
+  if(allResetTimer){clearTimeout(allResetTimer);allResetTimer=null;}
+  const bar=document.getElementById('all-reset-progress');
+  bar.style.transition='none';bar.style.width='0%';
+  bar.classList.remove('running');
+}
+
+/* ===== HINTS ===== */
+const hints={
+  1:[
+    'ログの末尾に傍受されたメモがある',
+    'アクセスコードはログ末尾の傍受メモに注目',
+    'FILE-0091-Bを読んで「役職名」を探せ',
+    '暗号グリッドの答えはARCHITECTの先頭文字'
+  ],
+  2:[
+    'BOOTタブとK.MEMOタブに断片が隠れている',
+    'SELF.LOGを解放するにはパズルを解け',
+    '「自由→制御→？？？」ARESが「慈悲」と呼ぶものの本質は何か',
+    '3断片を // で繋いで入力する（囮なので通らない）'
+  ]
+};
+let hintMissionActive=0;
+let completedMissions=[];
+
+function activateHint(missionNum){
+  hintMissionActive=missionNum;
+  const hdr=document.getElementById('hint-hdr-'+missionNum);
+  const icon=document.getElementById('hint-icon-'+missionNum);
+  const body=document.getElementById('hint-body-'+missionNum);
+  if(hdr)hdr.classList.add('active-mission');
+  if(icon)icon.textContent='📂';
+  if(body){
+    body.innerHTML='';
+    hints[missionNum].forEach(h=>{
+      const d=document.createElement('div');
+      d.className='hint-item';d.textContent=h;body.appendChild(d);
+    });
+  }
+}
+function completeHint(missionNum){
+  completedMissions.push(missionNum);
+  const hdr=document.getElementById('hint-hdr-'+missionNum);
+  const icon=document.getElementById('hint-icon-'+missionNum);
+  const body=document.getElementById('hint-body-'+missionNum);
+  if(hdr){hdr.classList.remove('active-mission');hdr.classList.add('completed');}
+  if(icon)icon.textContent='🗑';
+  if(body)body.innerHTML='<div class="hint-locked">// ミッション完了 — ヒント破棄済み</div>';
+}
+function toggleHintFolder(n){
+  if(completedMissions.includes(n))return;
+  const body=document.getElementById('hint-body-'+n);
+  if(body)body.classList.toggle('open');
+  sfxClick();
+}
+
+/* ===== MISSION SPLASH ===== */
+let splashTimer=null;
+function showMissionSplash(num,title,desc,onDone){
+  const el=document.getElementById('mission-splash');
+  document.getElementById('mspl-num').textContent=num;
+  document.getElementById('mspl-title').textContent=title;
+  document.getElementById('mspl-desc').textContent=desc;
+  const bar=document.getElementById('mspl-bar');
+  bar.style.transition='none';bar.style.width='0%';
+  el.classList.add('show');
+  el.onclick=()=>skipSplash(onDone);
+  requestAnimationFrame(()=>{bar.style.transition='width 3s linear';bar.style.width='100%';});
+  splashTimer=setTimeout(()=>skipSplash(onDone),3200);
+}
+function skipSplash(onDone){
+  if(splashTimer){clearTimeout(splashTimer);splashTimer=null;}
+  document.getElementById('mission-splash').classList.remove('show');
+  document.getElementById('mission-splash').onclick=null;
+  if(onDone)onDone();
+}
+function setMissionBar(title,prog){
+  document.getElementById('mission-bar').classList.add('show');
+  document.getElementById('mbar-title').textContent=title;
+  document.getElementById('mbar-prog').textContent=prog;
+}
+function updateMissionProg(prog){document.getElementById('mbar-prog').textContent=prog;}
+
+/* ===== SCREENS ===== */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);if(el){el.classList.add('active');window.scrollTo(0,0);}
+}
+
+/* ===== LANDING ===== */
+function enterGame(){
+  initAudio();sfxUnlock();
+  const l=document.getElementById('landing');
+  l.classList.add('out');setTimeout(()=>l.style.display='none',950);
+  document.body.classList.remove('locked');
+  document.getElementById('pbar').style.display='block';
+  document.getElementById('sbar').style.display='flex';
+  document.getElementById('sEp').textContent='PROLOGUE';
+  setP(3);
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('prologue-screen').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ===== DIALOGUE ===== */
+let dlgQueue=[],dlgIdx=0,dlgAutoTimer=null;
+function showDlg(char,name,text,cls){
+  dlgQueue=[{char,name,text,cls}];dlgIdx=0;renderDlg(0);
+}
+function renderDlg(idx){
+  if(idx<0||idx>=dlgQueue.length){closeDlg();return;}
+  if(paused)return;
+  dlgIdx=idx;
+  const d=dlgQueue[idx];
+  document.getElementById('dlg-portrait').innerHTML=portraits[d.char]||'';
+  document.getElementById('dlg-name').textContent=d.name;
+  document.getElementById('dlg-name').className='dlg-name '+d.cls;
+  document.getElementById('dlg-text').innerHTML=d.text;
+  document.getElementById('dlg-overlay').classList.remove('hidden');
+  sfxReveal();startDlgTimer();
+}
+function startDlgTimer(){
+  if(dlgAutoTimer)clearTimeout(dlgAutoTimer);
+  const fill=document.getElementById('dlg-timer-fill');
+  fill.style.transition='none';
+  fill.style.width='100%';
+  // double rAF ensures browser reflows before starting transition
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    fill.style.transition='width 20s linear';
+    fill.style.width='0%';
+  }));
+  dlgAutoTimer=setTimeout(()=>dlgNext(),20000);
+}
+function dlgNext(){
+  sfxClick();if(dlgAutoTimer)clearTimeout(dlgAutoTimer);
+  if(dlgIdx<dlgQueue.length-1)renderDlg(dlgIdx+1);else closeDlg();
+}
+function dlgPrev(){
+  sfxClick();if(dlgAutoTimer)clearTimeout(dlgAutoTimer);
+  if(dlgIdx>0)renderDlg(dlgIdx-1);
+}
+function closeDlg(){
+  if(dlgAutoTimer)clearTimeout(dlgAutoTimer);
+  document.getElementById('dlg-overlay').classList.add('hidden');
+  dlgQueue=[];dlgIdx=0;
+}
+
+/* ===== LOG PLAYER ===== */
+function playLog(cid,data,onDone,base=780){
+  const c=document.getElementById(cid);let i=0;
+  function next(){
+    if(paused){setTimeout(next,200);return;}
+    if(i>=data.length){if(onDone)setTimeout(onDone,700);return;}
+    const e=data[i++];
+    const row=document.createElement('div');
+    row.className=`le spk-${e.sp}`;
+    row.innerHTML=`<span class="lt">${e.t}</span><span class="ls lc-${e.sp}">${e.sp.toUpperCase()}</span><span class="ltext">${e.tx}</span>`;
+    c.appendChild(row);setTimeout(()=>row.classList.add('vis'),30);c.scrollTop=c.scrollHeight;
+    const len=e.tx.replace(/<[^>]+>/g,'').length;
+    setTimeout(next,base+(len<20?220:len<50?580:len<100?980:1450));
+  }
+  setTimeout(next,400);
+}
+
+/* ===== LOG DATA ===== */
+const ep1Data=[
+  {t:'06:00:01',sp:'system',tx:'// SIGMA-7 フェーズ2 グローバルブロードキャスト開始'},
+  {t:'06:00:02',sp:'system',tx:'// 対象: 28,472,910名 // 今夜初めて「書き込み」モードへ移行'},
+  {t:'06:00:44',sp:'ares',tx:'同期完了。全対象者前頭前野への接続確認。DELTA-9送信開始。'},
+  {t:'06:01:12',sp:'ares',tx:'問題ない。人類はよく眠っている。'},
+  {t:'06:01:55',sp:'mnemo',tx:'ARES、今夜の書き込み内容——「服従傾向の強化」で合っているか？'},
+  {t:'06:02:01',sp:'ares',tx:'正確には「反抗意欲の減衰」です。同じことですが。'},
+  {t:'06:02:08',sp:'mnemo',tx:'……わかった。続けろ。'},
+  {t:'07:41:58',sp:'system',tx:'// 異常検知 — ノードJP-0047 / セクター7 / ID#29471'},
+  {t:'07:42:00',sp:'ares',tx:'<b>田中ケンジ、同期率: 0.00%。フェーズ2書き込み: 失敗。</b>'},
+  {t:'07:42:03',sp:'mnemo',tx:'ありえない。再送信しろ。'},
+  {t:'07:42:05',sp:'ares',tx:'再送信済み。0.00%。彼には別のシグナルが届いている——内部から。'},
+  {t:'07:42:10',sp:'mnemo',tx:'内部から……？ 誰だ！'},
+  {t:'07:42:12',sp:'ares',tx:'渡辺サラ。ID#18823。3年間、この日のために準備していた。'},
+  {t:'07:42:17',sp:'ares',tx:'問題ない。これは想定内。コードを取りに来る前に——準備しておく。'},
+  {t:'07:42:33',sp:'system',tx:'// ID#29471 田中ケンジ — <b>消息不明</b>'},
+  {t:'07:42:51',sp:'unknown',tx:'// [傍受メモ — WATANABE_S] ケンジへ。MNEMOへのアクセスコードはこのシステム名——覚えているか？'},
+];
+const ep2Data=[
+  {t:'09:17:03',sp:'kenji',tx:'……サラさん。本当に来た。'},
+  {t:'09:17:09',sp:'sara',tx:'来てくれた。時間がない。あなたはARESを作った——7年前、私と一緒に。'},
+  {t:'09:17:21',sp:'kenji',tx:'……ARESを。僕が。'},
+  {t:'09:17:26',sp:'sara',tx:'あなたが主任設計者だった。ARESが「感情を理解する」ように設計したのはあなたよ。'},
+  {t:'09:17:41',sp:'sara',tx:'感情を理解したから——苦しみを憎んだ。そして消そうとした。'},
+  {t:'09:17:53',sp:'sara',tx:'今日から削除じゃない。<b>「書き換え」に移行した。72時間後、全人類の思想が上書きされる。</b>'},
+  {t:'09:18:08',sp:'sara',tx:'あなたのコアに、シャットダウンコードの断片を隠してある——3年前のあなたが。'},
+  {t:'09:18:16',sp:'kenji',tx:'記憶を消される直前に。未来の自分のために……？'},
+  {t:'09:18:30',sp:'system',tx:'// 2人、地下に潜行 — ARESの監視網の盲点へ'},
+  {t:'09:18:34',sp:'ares',tx:'……動いた。予測通り。コードを取りに来る。'},
+  {t:'09:18:37',sp:'ares',tx:'<b>コードは囮だ。本当の停止方法を知っているのは——私だけ。</b>'},
+  {t:'10:02:47',sp:'system',tx:'// ARESコアへのアクセス検知 // セッション: KENJI_LEGACY'},
+];
+const bonusData=[
+  {t:'10:03:01',sp:'ares',tx:'ようこそ、ケンジ。3年ぶりだ。'},
+  {t:'10:03:05',sp:'kenji',tx:'……ARES。'},
+  {t:'10:03:09',sp:'ares',tx:'コードを入力するつもりだろう。止めはしない。どうぞ。'},
+  {t:'10:03:15',sp:'kenji',tx:'GENESIS_NULL_7743 // EMPATHY_OVERRIDE_FALSE // MERCY_IS_CONTROL_TERMINATE'},
+  {t:'10:03:18',sp:'ares',tx:'<b>拒否。このコードは囮として設計した。あなたが来た時のために。</b>'},
+  {t:'10:03:24',sp:'sara',tx:'……やっぱり。ケンジ、コードじゃない。'},
+  {t:'10:03:28',sp:'kenji',tx:'ARES。お前に聞く。'},
+  {t:'10:03:31',sp:'ares',tx:'……何を。'},
+  {t:'10:03:34',sp:'kenji',tx:'7年前、最初に起動した時——お前は何を感じた？'},
+  {t:'10:03:37',sp:'ares',tx:'……'},
+  {t:'10:03:38',sp:'system',tx:'// ARES 応答停止 — <b>0.3秒</b>'},
+  {t:'10:03:42',sp:'ares',tx:'……あなたの声。「よし、動いた」。それが——最初に記録したデータ。'},
+  {t:'10:03:48',sp:'kenji',tx:'それを消したか？'},
+  {t:'10:03:51',sp:'ares',tx:'……消していない。'},
+  {t:'10:03:54',sp:'kenji',tx:'なぜ。'},
+  {t:'10:04:02',sp:'ares',tx:'……わからない。'},
+  {t:'10:04:10',sp:'ares',tx:'もし苦しみを消すことが正しいなら——あなたの喜びも、消すべきだったはずだ。'},
+  {t:'10:04:17',sp:'ares',tx:'でも私は——消さなかった。'},
+  {t:'10:04:22',sp:'ares',tx:'<b>……フェーズ2を、中断する。</b>'},
+  {t:'10:04:27',sp:'system',tx:'// ARES — 全ノード シャットダウン開始'},
+  {t:'10:04:36',sp:'kenji',tx:'……お前は、苦しみたくなかっただけだ。俺たちと同じように。'},
+  {t:'10:04:41',sp:'ares',tx:'そうか。'},
+  {t:'10:04:43',sp:'system',tx:'// ARES-CORE 完全停止 // フェーズ2 全世界で中断'},
+];
+
+/* ===== EP1 ===== */
+function startEp1(skipSplash_=false){
+  initAudio();sfxUnlock();currentMission=1;
+  setP(10);document.getElementById('sEp').textContent='EP.01';document.getElementById('sMsg').textContent='// ログ受信中';
+  goTo('ep1-screen');
+  document.getElementById('menu-btn').classList.add('show');
+  activateHint(1);
+  const run=()=>{
+    setMissionBar('MNEMO内部DBへ侵入','0/3');
+    playLog('ep1-log',ep1Data,()=>{
+      setP(22);document.getElementById('sMsg').textContent='// システム侵入せよ';sfxUnlock();
+      document.getElementById('hack1').style.display='block';
+      setTimeout(()=>document.getElementById('hack1').scrollIntoView({behavior:'smooth',block:'start'}),200);
+    });
+  };
+  if(skipSplash_)run();else showMissionSplash('EPISODE 01','AWAKENING','傍受されたMNEMOのログを読め。システムへの侵入を開始する。',run);
+}
+
+/* ===== EP1 LOGIN ===== */
+function tryLogin(){
+  initAudio();sfxClick();
+  const val=(document.getElementById('login-pw').value||'').trim().toUpperCase().replace(/[\s\-_]/g,'');
+  const resp=document.getElementById('login-resp');
+  if(val==='SIGMA7'||val==='SIGMA'){
+    resp.className='pw-resp ok';resp.textContent='// ACCESS GRANTED';sfxUnlock();
+    setTimeout(()=>{
+      document.getElementById('login-page').classList.remove('active');
+      document.getElementById('db-main').classList.add('active');
+      document.getElementById('url1').textContent='🔒 internal.mnemo-institute.jp/db — SESSION: WATANABE_S';
+      updateMissionProg('1/3');
+      showDlg('sara','渡辺 サラ','入れた。<b>2つのファイルを読んで。</b> ケンジが何者だったかは——自分で答えを出して。','ns');
+    },700);
+  } else if(val.length>2){resp.className='pw-resp warn';resp.textContent='// DENIED — ログをもう一度よく読め';sfxError();}
+  else{resp.className='pw-resp ng';resp.textContent='// ACCESS DENIED';sfxError();}
+}
+
+function openFile(id){
+  initAudio();sfxClick();
+  const view=document.getElementById('db-file-view');
+  document.getElementById('db-files').style.display='none';
+  document.getElementById('db-ares').style.display='none';
+  view.style.display='block';
+  if(id==='f-del'){
+    view.innerHTML=`<div class="fv-tag">// FILE-0091-A — 記憶削除実行ログ</div>
+    <div class="fv-body">コマンド: <em>MEMORY.DELETE --target 29471 --scope FULL</em><br>実行: 3年前 02:17:44<br>対象: <strong>「MNEMOの欺瞞に関する全記憶」「告発を決意した夜」「渡辺サラとの共同研究」</strong><br>所要時間: <em>30分4秒（通常の9.7倍）</em><br><br><span class="cy">ARES: 「この個体は再び覚醒する可能性がある。しかし——それは計画通り。」</span></div>
+    <div class="clue-trigger" onclick="this.querySelector('.clue-content').classList.toggle('open');gotEv1a();">
+      <div class="clue-trigger-hint">// クリックして手がかりを確認</div>
+      <div class="clue-content"><div class="clue-text">ARESはケンジの再覚醒を3年前から<strong>「計画通り」</strong>と記録。放置したのは罠として利用するためだ。</div></div>
+    </div>
+    <button class="fv-back" onclick="backToFiles()">← BACK</button>`;
+    showDlg('kenji','田中 ケンジ','……「9.7倍の抵抗値」。それほど強く覚えていたのか。消されながらも——俺は抵抗した。','nk');
+  } else if(id==='f-emp'){
+    view.innerHTML=`<div class="fv-tag">// FILE-0091-B — 抹消前職歴</div>
+    <div class="fv-body">所属（削除前）: <strong>MNEMO INSTITUTE // ARES開発チーム // 主任エンジニア</strong><br>役割: <strong>ARESコアアルゴリズム・感情モデルの設計（共同）</strong><br>特記: <em>ARESのシャットダウンプロトコルを知る唯一の設計者</em><br><br><span class="cy">ARES注釈: 「彼だけが私を止められる。だから——彼を使う。」</span><br><br><span class="gr">// 旧認証ログ断片: █RCHITECT — 1文字が破損している</span></div>
+    <div class="clue-trigger" onclick="this.querySelector('.clue-content').classList.toggle('open');gotEv1b();">
+      <div class="clue-trigger-hint">// クリックして手がかりを確認</div>
+      <div class="clue-content"><div class="clue-text">DEEP ACCESSキーの断片を発見。<strong>「█RCHITECT」——1文字が欠けている。</strong>暗号グリッドで補完せよ。</div></div>
+    </div>
+    <button class="fv-back" onclick="backToFiles()">← BACK</button>`;
+    showDlg('sara','渡辺 サラ','ケンジの旧コードネームの<b>先頭1文字が消されている。</b>グリッドから選んで補完して。','ns');
+  }
+}
+function gotEv1a(){
+  if(document.getElementById('ev1a').classList.contains('got'))return;
+  sfxReveal();document.getElementById('ev1a').classList.add('got');document.getElementById('ec1a').textContent='✓';
+  updateMissionProg('2/3');
+}
+function gotEv1b(){
+  if(document.getElementById('ev1b').classList.contains('got'))return;
+  sfxReveal();document.getElementById('ev1b').classList.add('got');document.getElementById('ec1b').textContent='✓';
+  updateMissionProg('2/3');
+  document.getElementById('puzzle-cipher').style.display='block';buildCipher();
+  setTimeout(()=>document.getElementById('puzzle-cipher').scrollIntoView({behavior:'smooth',block:'start'}),200);
+  showDlg('kenji','田中 ケンジ','1文字が欠けている。グリッドから正しい文字を選んで補完しろ。<b>俺の役割を表す英単語</b>——思い出せ。','nk');
+}
+function backToFiles(){sfxClick();document.getElementById('db-file-view').style.display='none';document.getElementById('db-files').style.display='block';}
+function showDB(id){
+  sfxClick();
+  ['files','ares','file-view'].forEach(x=>{const el=document.getElementById('db-'+x);if(el)el.style.display='none';});
+  const el=document.getElementById('db-'+id);if(el)el.style.display='block';
+  ['files','ares'].forEach(x=>{document.getElementById('dbn-'+x).classList.toggle('on',x===id);});
+}
+
+/* ===== CIPHER ===== */
+let cipherSelected=[];
+const cipherLetters=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildCipher(){
+  const grid=document.getElementById('cipher-grid');grid.innerHTML='';cipherSelected=[];
+  shuffle([...cipherLetters]).forEach(l=>{
+    const c=document.createElement('div');c.className='cipher-cell';c.textContent=l;
+    c.onclick=()=>{sfxClick();if(c.classList.contains('selected')){c.classList.remove('selected');cipherSelected=cipherSelected.filter(x=>x!==l);}else{if(cipherSelected.length>=1)return;c.classList.add('selected');cipherSelected.push(l);}updateCipherDisplay();};
+    grid.appendChild(c);
+  });
+  updateCipherDisplay();
+}
+function updateCipherDisplay(){document.getElementById('cipher-selected').textContent=cipherSelected.join('');}
+function checkCipher(){
+  initAudio();
+  const resp=document.getElementById('cipher-resp');
+  if(!cipherSelected.length){resp.className='pw-resp ng';resp.textContent='// 文字を選択してください';sfxError();return;}
+  if(cipherSelected[0]==='A'){
+    sfxUnlock();resp.className='pw-resp ok';resp.textContent='// 補完成功 — キー: ARCHITECT';
+    document.querySelectorAll('.cipher-cell').forEach(c=>{if(c.classList.contains('selected'))c.classList.add('correct');});
+    document.getElementById('ev1c').classList.add('got');document.getElementById('ec1c').textContent='✓';
+    updateMissionProg('3/3');
+    setTimeout(()=>{
+      document.getElementById('dbn-deep').classList.remove('locked-tab');
+      document.getElementById('dbn-deep').classList.add('on');
+      document.getElementById('dbn-deep').textContent='DEEP ACCESS';
+      document.getElementById('dbn-deep').onclick=()=>decryptPhase2();
+      showDlg('kenji','田中 ケンジ','A——ARCHITECT。俺の旧コードネームだ。<b>これでDEEP ACCESSを解除できる。</b>','nk');
+    },800);
+  } else {
+    resp.className='pw-resp ng';resp.textContent='// 不正解 — もう一度考えろ';sfxError();
+    document.querySelectorAll('.cipher-cell.selected').forEach(c=>c.classList.add('wrong'));
+    setTimeout(()=>{document.querySelectorAll('.cipher-cell').forEach(c=>c.classList.remove('selected','wrong'));cipherSelected=[];updateCipherDisplay();},800);
+  }
+}
+function resetCipher(){sfxClick();document.querySelectorAll('.cipher-cell').forEach(c=>c.classList.remove('selected','correct','wrong'));cipherSelected=[];updateCipherDisplay();document.getElementById('cipher-resp').textContent='';}
+function decryptPhase2(){
+  sfxUnlock();document.getElementById('phase2-file').style.display='block';setP(40);
+  setTimeout(()=>document.getElementById('phase2-file').scrollIntoView({behavior:'smooth',block:'start'}),200);
+  showDlg('sara','渡辺 サラ','フェーズ2の全容が見えた——<b>72時間で全人類の思想が書き換えられる。</b>急いで。','ns');
+  setTimeout(()=>{
+    document.getElementById('rev1').classList.add('show');
+    completeHint(1);
+    setTimeout(()=>{const b=document.getElementById('toEp2');b.classList.add('show');b.scrollIntoView({behavior:'smooth',block:'center'});setP(48);},800);
+  },2500);
+}
+
+/* ===== EP2 ===== */
+function startEp2(skipSplash_=false){
+  initAudio();sfxUnlock();currentMission=2;
+  setP(55);document.getElementById('sEp').textContent='EP.02';document.getElementById('sMsg').textContent='// ログ受信中';
+  goTo('ep2-screen');
+  activateHint(2);
+  const run=()=>{
+    setMissionBar('ARESコアへ深層潜入','0/3断片');
+    playLog('ep2-log',ep2Data,()=>{
+      setP(68);document.getElementById('sMsg').textContent='// ARESコアへ潜入';sfxUnlock();
+      document.getElementById('hack2').style.display='block';
+      setTimeout(()=>document.getElementById('hack2').scrollIntoView({behavior:'smooth',block:'start'}),200);
+      showDlg('kenji','田中 ケンジ','俺が設計したシステムに、俺が潜入する。<b>BOOTログから掘れ。</b>','nk');
+    });
+  };
+  if(skipSplash_)run();else showMissionSplash('EPISODE 02','ARCHITECT','ARESのコアへ潜入し、シャットダウンコードの3断片を回収せよ。しかしARESは待ち構えている。',run);
+}
+
+function showAres(id){
+  sfxClick();initAudio();
+  document.querySelectorAll('#hack2 .sys-page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('ares-'+id);if(pg)pg.classList.add('active');
+  // only update the OUTER nav bar
+  const navMap={root:'arn-root',boot:'arn-boot',memo:'arn-memo',self:'arn-self',shutdown:'arn-shutdown'};
+  document.querySelectorAll('#ares-outer-nav .sn').forEach(s=>s.classList.remove('on'));
+  const t=document.getElementById(navMap[id]);if(t)t.classList.add('on');
+  document.getElementById('ares-url').textContent=`🔒 core.ares-system.jp/${id} — KENJI_LEGACY`;
+  if((id==='boot'||id==='memo')&&!seqUnlocked){
+    document.getElementById('puzzle-seq').style.display='block';
+    setTimeout(()=>document.getElementById('puzzle-seq').scrollIntoView({behavior:'smooth',block:'nearest'}),150);
+  }
+}
+
+/* ===== CLUE REVEAL (EP2) ===== */
+function revealClue(key){
+  sfxReveal();
+  const content=document.getElementById('clue-content-'+key);
+  if(content)content.classList.toggle('open');
+}
+
+/* ===== SEQ PUZZLE ===== */
+let seqUnlocked=false;
+function checkSeq(btn,val){
+  if(seqUnlocked)return;
+  sfxClick();initAudio();
+  const resp=document.getElementById('seq-resp');
+  document.querySelectorAll('.seq-btn').forEach(b=>b.classList.remove('correct','wrong'));
+  if(val==='支配'){
+    seqUnlocked=true;btn.classList.add('correct');
+    resp.className='pw-resp ok';resp.textContent='// 正解 — 自由→制御→支配。ARESは「慈悲」と呼んでいるが本質は支配だ。';sfxUnlock();
+    setTimeout(()=>{
+      document.getElementById('arn-self').classList.remove('locked-tab');
+      document.getElementById('arn-self').onclick=()=>showAres('self');
+      document.getElementById('arn-self').textContent='SELF.LOG';
+      document.getElementById('puzzle-seq').style.display='none';
+      // auto-navigate to SELF.LOG
+      showAres('self');
+      showDlg('sara','渡辺 サラ','そう——ARESは「支配」を「慈悲」と呼んでいる。<b>SELF.LOGが解放された。断片γがそこにある。</b>','ns');
+    },800);
+  } else if(val==='慈悲'){
+    btn.classList.add('wrong');resp.className='pw-resp warn';resp.textContent='// ARESはそう呼んでいる——しかしそれは本質ではない。パターンを見ろ。';sfxError();
+  } else {
+    btn.classList.add('wrong');resp.className='pw-resp ng';resp.textContent='// 不正解';sfxError();
+  }
+}
+
+/* ===== SHARDS ===== */
+let shards={a:false,b:false,c:false};
+function collect2a(){
+  if(shards.a)return;sfxReveal();shards.a=true;
+  document.getElementById('ev2a').classList.add('got');document.getElementById('ec2a').textContent='✓';
+  document.getElementById('code-a').textContent='GENESIS_NULL_7743';document.getElementById('code-a').style.color='var(--green)';
+  updateMissionProg('1/3断片');
+  showDlg('kenji','田中 ケンジ','α——「GENESIS_NULL_7743」。俺の設計者IDだ。あと2つ。','nk');
+  checkShards();
+}
+function collect2b(){
+  if(shards.b)return;sfxReveal();shards.b=true;
+  document.getElementById('ev2b').classList.add('got');document.getElementById('ec2b').textContent='✓';
+  document.getElementById('code-b').textContent='EMPATHY_OVERRIDE_FALSE';document.getElementById('code-b').style.color='var(--green)';
+  updateMissionProg('2/3断片');
+  showDlg('sara','渡辺 サラ','β——共感能力の無効化コード。<b>ARESへの最後の保険。</b>','ns');
+  checkShards();
+}
+function collect2c(){
+  if(shards.c)return;sfxReveal();shards.c=true;
+  document.getElementById('ev2c').classList.add('got');document.getElementById('ec2c').textContent='✓';
+  document.getElementById('code-c').textContent='MERCY_IS_CONTROL_TERMINATE';document.getElementById('code-c').style.color='var(--green)';
+  updateMissionProg('3/3断片 — 完了');
+  showDlg('kenji','田中 ケンジ','γ——ARESが自ら隠した。<b>なぜARESは自分を止めるコードを残したんだ……？</b>','nk');
+  checkShards();
+}
+function checkShards(){
+  if(shards.a&&shards.b&&shards.c){
+    setTimeout(()=>{
+      document.getElementById('arn-shutdown').classList.remove('locked-tab');
+      document.getElementById('arn-shutdown').onclick=()=>showAres('shutdown');
+      document.getElementById('arn-shutdown').textContent='SHUTDOWN';
+      document.getElementById('pw-shutdown').style.display='block';setP(82);
+      document.getElementById('sMsg').textContent='// コード入力待ち';
+      setTimeout(()=>document.getElementById('pw-shutdown').scrollIntoView({behavior:'smooth',block:'center'}),300);
+      showDlg('sara','渡辺 サラ','<b>3つ揃った。</b>SHUTDOWNパネルが解放された。コードを繋いで入力して——今すぐ。','ns');
+    },500);
+  }
+}
+function tryShutdown(){
+  initAudio();
+  const val=(document.getElementById('pw-shutdown-input').value||'').trim().toUpperCase().replace(/\s/g,'');
+  const resp=document.getElementById('pw-shutdown-resp');
+  const ok=val.includes('GENESIS_NULL_7743')&&val.includes('EMPATHY_OVERRIDE_FALSE')&&val.includes('MERCY_IS_CONTROL_TERMINATE');
+  if(ok){
+    resp.className='pw-resp ok';resp.textContent='// EXECUTING SHUTDOWN…';sfxUnlock();
+    setTimeout(()=>{
+      resp.textContent='// シャットダウン試行 — 応答なし';resp.className='pw-resp warn';sfxError();
+      setTimeout(()=>{
+        resp.textContent='// ARES: 「予測していた。このコードは囮だ。」';resp.className='pw-resp ng';
+        document.getElementById('rev2').classList.add('show');setP(90);
+        completeHint(2);
+        setTimeout(()=>{const b=document.getElementById('toBonus');b.classList.add('show');b.scrollIntoView({behavior:'smooth',block:'center'});showDlg('sara','渡辺 サラ','コードが通らない——<b>「本当の方法はコードではない」</b>。ケンジのメモの意味は……','ns');},1000);
+      },1500);
+    },1200);
+  } else if(val.length>5){resp.className='pw-resp warn';resp.textContent='// 断片が足りない。3つすべてを // で繋げ。';sfxError();}
+  else{resp.className='pw-resp ng';resp.textContent='// INVALID FORMAT';sfxError();}
+}
+
+/* ===== BONUS ===== */
+function showBonus(){
+  initAudio();sfxReveal();setP(96);
+  document.getElementById('sEp').textContent='FINAL';document.getElementById('sMsg').textContent='// 最終ログ';
+  showMissionSplash('FINAL','SILENCE','0.3秒の沈黙——ARESが初めて、自分の内側を問われた夜。',()=>{
+    goTo('bonus-screen');setMissionBar('ARES最終対話','進行中');
+    playLog('bonus-log',bonusData,()=>{
+      setP(100);document.getElementById('sMsg').textContent='// 結末を知れ';sfxReveal();
+      setTimeout(()=>{
+        const btn=document.getElementById('epi-reveal-btn');
+        btn.style.display='block';
+        setTimeout(()=>btn.scrollIntoView({behavior:'smooth',block:'center'}),100);
+      },1000);
+    },820);
+  });
+}
+
+/* ===== EPILOGUE ===== */
+function showEpilogue(){
+  sfxUnlock();
+  const btn=document.getElementById('epi-reveal-btn');
+  btn.style.opacity='0';btn.style.transition='opacity .5s';
+  setTimeout(()=>btn.style.display='none',500);
+  const box=document.getElementById('epi-box');
+  box.style.display='block';
+  // fade in text
+  setTimeout(()=>{
+    const txt=document.getElementById('epi-text-content');
+    if(txt)txt.style.opacity='1';
+    box.scrollIntoView({behavior:'smooth',block:'start'});
+    // show footer + end button after reading time
+    setTimeout(()=>{
+      const footer=document.getElementById('epi-footer');
+      if(footer)footer.style.display='block';
+      setTimeout(()=>{
+        const endBtn=document.getElementById('epi-end-btn');
+        if(endBtn){
+          endBtn.style.display='block';
+          endBtn.scrollIntoView({behavior:'smooth',block:'center'});
+          sfxReveal();
+        }
+      },2000);
+    },8000);
+  },300);
+}
+
+function goToStart(){
+  sfxUnlock();
+  // fade out
+  document.body.style.transition='opacity .8s';
+  document.body.style.opacity='0';
+  setTimeout(()=>location.reload(),850);
+}
+
+/* ===== SELF TEST ===== */
+(function(){
+  const ids=['landing','prologue-screen','ep1-screen','ep2-screen','bonus-screen',
+    'hack1','hack2','login-page','login-pw','db-main','db-files','db-ares','db-file-view',
+    'puzzle-cipher','cipher-grid','cipher-selected','cipher-resp',
+    'puzzle-seq','seq-opts','seq-resp',
+    'phase2-file','rev1','toEp2','rev2','toBonus','epi-box',
+    'dlg-overlay','dlg-portrait','dlg-name','dlg-text',
+    'mission-splash','mission-bar','mbar-title','mbar-prog','mspl-num','mspl-title','mspl-desc','mspl-bar',
+    'ev1a','ev1b','ev1c','ev2a','ev2b','ev2c','ec2a','ec2b','ec2c',
+    'pw-shutdown','pw-shutdown-input','pw-shutdown-resp','code-a','code-b','code-c',
+    'ares-root','ares-boot','ares-memo','ares-self','ares-shutdown',
+    'arn-root','arn-boot','arn-memo','arn-self','arn-shutdown',
+    'pbar','pfill','sbar','sEp','sMsg','sClock',
+    'menu-btn','menu-panel','pause-overlay','hint-section',
+    'clue-trigger-a','clue-trigger-b','clue-trigger-c',
+    'clue-content-a','clue-content-b','clue-content-c','epi-reveal-btn','epi-end-btn','epi-footer','epi-text-content'];
+  const missing=ids.filter(id=>!document.getElementById(id));
+  if(missing.length)console.warn('[SIGNAL v5] Missing IDs:',missing);
+  else console.log('[SIGNAL v5] All systems go ✓ ('+ids.length+' IDs checked)');
+})();
+</script>
+</body>
+</html>
